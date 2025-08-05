@@ -129,8 +129,7 @@ var FvPollingLib = function(callbacks) {
 }
 
 /**
- * ticker（レスポンシブ対応版・重複表示修正済）
- * モバイル縦向けでの1行表示（文字サイズ調整済）
+ *ticker
  */
  var setTicker = function(){
 
@@ -149,78 +148,28 @@ var FvPollingLib = function(callbacks) {
 
     var ulWidth = $targetUl.width();
     var listHeight = $targetLi.height();
-    
-    // モバイル縦向けでの高さ調整（1行表示用）
-    var isMobilePortrait = window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
-    var adjustedHeight = isMobilePortrait ? Math.max(listHeight, 24) : listHeight;
-    
-    $targetObj.css({height: adjustedHeight});
-    
-    // ☆ 重要：初期化時に全てのliを非表示にしてからアニメーション用のスタイルを設定
-    $targetLi.css({
-      'position': 'absolute',
-      'top': '0',
-      'left': '0',
-      'width': '100%',
-      'display': 'none'  // ← ここが重要！最初は全て非表示
-    });
+    $targetObj.css({height:(listHeight)});
+    $targetLi.css({top:'0',left:'0',position:'absolute'});
 
     if(effectFilter == 'fade') {
-      // 最初の要素のみ表示してフェードイン
       $setList.css({display:'block',opacity:'0',zIndex:'98'}).stop().animate({opacity:'1'},effectSpeed,easing).addClass('showlist');
-      
       timer_id = setInterval(function(){
         var $activeShow = $targetObj.find('.showlist');
         $activeShow.animate({opacity:'0'},effectSpeed,easing,function(){
-          var $next = $(this).next();
-          if ($next.length === 0) $next = $targetObj.find('li:first');
-          
-          // 次の要素を表示
-          $next.css({display:'block',opacity:'0',zIndex:'99'});
-          
-          $next.animate({opacity:'1'},effectSpeed,easing).addClass('showlist');
-          
-          // 前の要素を完全に非表示にしてから移動
-          $(this).css({display:'none',zIndex:'98'}).removeClass('showlist').appendTo($targetUl);
+          $(this).next().css({display:'block',opacity:'0',zIndex:'99'}).animate({opacity:'1'},effectSpeed,easing).addClass('showlist').end().appendTo($targetUl).css({display:'none',zIndex:'98'}).removeClass('showlist');
         });
       },switchDelay);
-      
     } else if(effectFilter == 'roll') {
-      // 最初の要素のみ表示してロールイン
       $setList.css({top:'3em',display:'block',opacity:'0',zIndex:'98'}).stop().animate({top:'0',opacity:'1'},effectSpeed,easing).addClass('showlist');
-      
       timer_id = setInterval(function(){
         var $activeShow = $targetObj.find('.showlist');
-        var $next = $activeShow.next();
-        if ($next.length === 0) $next = $targetObj.find('li:first');
-        
-        // 現在の要素をフェードアウト後に非表示
-        $activeShow.animate({top:'-3em',opacity:'0'},effectSpeed,easing,function(){
-          $(this).css({display:'none',zIndex:'98'}).removeClass('showlist').appendTo($targetUl);
-        });
-        
-        // 次の要素を上からスライドイン
-        $next.css({top:'3em',display:'block',opacity:'0',zIndex:'99'});
-        $next.animate({top:'0',opacity:'1'},effectSpeed,easing).addClass('showlist');
+        $activeShow.animate({top:'-3em',opacity:'0'},effectSpeed,easing).next().css({top:'3em',display:'block',opacity:'0',zIndex:'99'}).animate({top:'0',opacity:'1'},effectSpeed,easing).addClass('showlist').end().appendTo($targetUl).css({zIndex:'98'}).removeClass('showlist');
       },switchDelay);
-      
     } else if(effectFilter == 'slide') {
-      // 最初の要素のみ表示してスライドイン
       $setList.css({left:(ulWidth),display:'block',opacity:'0',zIndex:'98'}).stop().animate({left:'0',opacity:'1'},effectSpeed,easing).addClass('showlist');
-      
       timer_id = setInterval(function(){
         var $activeShow = $targetObj.find('.showlist');
-        var $next = $activeShow.next();
-        if ($next.length === 0) $next = $targetObj.find('li:first');
-        
-        // 現在の要素をスライドアウト後に非表示
-        $activeShow.animate({left:(-(ulWidth)),opacity:'0'},effectSpeed,easing,function(){
-          $(this).css({display:'none',zIndex:'98'}).removeClass('showlist').appendTo($targetUl);
-        });
-        
-        // 次の要素を右からスライドイン
-        $next.css({left:(ulWidth),display:'block',opacity:'0',zIndex:'99'});
-        $next.animate({left:'0',opacity:'1'},effectSpeed,easing).addClass('showlist');
+        $activeShow.animate({left:(-(ulWidth)),opacity:'0'},effectSpeed,easing).next().css({left:(ulWidth),display:'block',opacity:'0',zIndex:'99'}).animate({left:'0',opacity:'1'},effectSpeed,easing).addClass('showlist').end().appendTo($targetUl).css({zIndex:'98'}).removeClass('showlist');
       },switchDelay);
     }
   });
