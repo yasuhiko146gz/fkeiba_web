@@ -1,0 +1,613 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;500;700&display=swap');
+
+html {}
+
+#fvPlayer {
+    width: 100%;
+    line-height: 0; /* 24.11.28 プレーヤー下部に発生する不要な6pxの空白を削除するため必要 */
+}
+
+
+body {
+    -webkit-text-size-adjust: 100%;
+}
+
+div.container-fluid {
+    padding: 0;
+}
+
+div#video {
+    padding: 0;
+
+}
+
+#header {
+    padding: 0;
+    margin: 0em 0em 0.5em 0;
+    display: flex;
+}
+
+div#header img {
+    max-width: 100%;
+    height: 60px !important;
+    padding-top: 0.5em;
+}
+
+div#notice {
+    background-color: #A5A5A5;
+}
+
+div#links>a {
+    margin: 0 0.5rem 0 0;
+    display: inline-block;
+}
+
+div#links>a:last-child {
+    margin: 0;
+}
+
+#links {
+    margin-top: 2.5em;
+    position: relative;
+}
+
+#links .link {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.link a {
+    vertical-align: bottom;
+    margin-right: 15px;
+    padding-bottom: 15px;
+}
+
+.link>img {
+    vertical-align: bottom;
+    padding-bottom: 15px;
+}
+
+.link font {
+    vertical-align: bottom;
+    padding-bottom: 15px;
+}
+
+#drop {
+    margin: 0.4em;
+}
+
+#paging {
+    margin: 0;
+    padding: 0;
+}
+
+div#paging>a {
+    width: 10rem;
+}
+
+div#paging a {
+    font-size: 1em;
+}
+
+.pagingcolor {
+    color: #F0252E;
+}
+
+div#paging div {
+    padding: 1em;
+}
+
+.pagingbackground {
+    background-color: #ccc;
+}
+
+.ticker {
+    margin: 0 auto;
+    width: 100%;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    box-sizing: border-box;
+    display: flex;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+}
+
+.ticker>div#notice_title {
+    width: 5rem;
+}
+
+.ticker ul {
+    display: inline-block;
+    width: 100%;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    height: 24px;
+    color: #FFF;
+    list-style: none;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.ticker ul li {
+    -ms-margin-top: 2px;
+    width: 100%;
+    display: none;
+}
+
+.ticker ul li p {
+    margin: 0;
+}
+
+.ticker ul li a {
+    color: #00A5D0;
+}
+
+#cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    /* 幅に対する高さを16:9に設定 */
+    background-color: black;
+    /* 見やすさのための背景色 */
+    color: #FFFFFF;
+    font-weight: 500;
+    text-align: center;
+    overflow: hidden;
+    margin: 0 auto;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#cover-notice {
+    margin: 0 auto;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 15px;
+
+}
+
+/* #cover のスタイル */
+#cover.pre-image {
+    /* 幅を100%に設定 */
+    width: 100%;
+    height: auto;
+
+    display: block;
+    justify-content: unset;
+    align-items: unset;
+    aspect-ratio: unset;
+
+    /* 背景色を黒に設定 */
+    background-color: black;
+    /* コンテンツを中央寄せ */
+    text-align: center;
+
+    display: flex;
+    /* 縦方向に配置 */
+    flex-direction: column;
+    /* 子要素を横方向に中央寄せ */
+    align-items: center;
+    /* 子要素を縦方向に中央寄せ */
+    justify-content: center;
+
+    z-index: 100;
+}
+
+/* #cover_image のスタイル */
+#cover-image {
+    /* 幅を親要素の100%に設定 */
+    width: 100%;
+    /* 高さを自動調整 */
+    aspect-ratio: 16 / 9;
+    /* 画像の比率を維持しながら表示 */
+    object-fit: cover;
+    /* 中央寄せ */
+    margin: 0 auto;
+}
+
+/* #cover_msg のスタイル */
+#cover-msg {
+    /* フォントサイズを4remに設定 */
+    font-size: 20px;
+    /* 上下に2remのパディングを追加 */
+    padding: 5px 0;
+
+    margin: 0 auto;
+
+    /* テキストの色を白に設定 */
+    color: white;
+    /* テキストを中央揃え */
+    text-align: center;
+}
+
+
+div.modal img {
+    max-width: 100%;
+    display: block;
+    margin: auto;
+}
+
+
+/**
+ * ヘルプ
+ */
+div#environment h3 {
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+div#environment table {
+    width: 100%;
+    margin: 0 0 3rem 0;
+}
+
+div#environment table tbody tr {
+    border-top: 1px solid #696969;
+    border-bottom: 1px solid #696969;
+}
+
+div#environment table tbody tr th {
+    padding: 1rem 0;
+    vertical-align: top;
+    line-height: 2.5rem;
+}
+
+div#environment table tbody tr th p {
+    margin: 0;
+    width: 8rem;
+}
+
+div#environment table tbody tr td {
+    padding: 1rem 0;
+    line-height: 2.5rem;
+}
+
+div#environment table tbody tr td p {
+    margin: 0;
+}
+
+div#environment table tbody tr td p.danger {
+    color: #F0252E;
+    font-size: 2rem;
+}
+
+@media screen and (max-width: 991px) {
+    div#paging {
+        margin: 0;
+        padding: 0;
+    }
+
+    div#paging div {
+        padding: 1em;
+    }
+
+}
+
+@media screen and (max-width: 500px) {
+    div#paging {
+        margin: 0;
+    }
+
+    div#paging div {
+        padding: 1em;
+    }
+
+    div#paging a {
+        font-size: 0.8em;
+    }
+
+    /* #fvPlayer {
+        width: 100%;
+    } */
+}
+
+@media screen and (min-width:200px) and (max-width: 1200px) {
+    #main-banner {
+        height: 90px !important;
+    }
+
+    #cover {
+        width: 100%;
+    }
+
+    /* #fvPlayer {
+        width: 100%;
+    } */
+}
+
+@media screen and (min-width:1200px) and (max-width: 1440px) {
+    #cover {
+        width: 100%;
+    }
+
+    #cover.pre-image {
+        width: 100%;
+    }
+
+    #cover-notice,
+    #cover-msg {
+        font-size: 24px;
+    }
+
+    /* #fvPlayer {
+        width: 100%;
+    } */
+}
+
+@media screen and (min-width:1440px) {
+    #cover {
+        width: 100%;
+    }
+
+    #cover.pre-image {
+        width: 100%;
+    }
+
+    #cover-notice,
+    #cover-msg {
+        font-size: 28px;
+    }
+
+    /* #fvPlayer {
+        width: 100%;
+    } */
+}
+
+.copyright small {
+    text-align: center;
+}
+
+.linkimg {
+    width: 15%;
+    object-fit: contain;
+}
+
+.mbimg {
+    width: 480px;
+    height: auto;
+}
+
+
+.full-width-image {
+    width: 66%;
+    /* 画像の幅を80%に設定して左右の余白を確保 */
+    margin: 3px 17%;
+    /* 上下に20px、左右に10%の余白を設定 */
+    display: block;
+    /* 画像をブロック要素として扱い、marginを適用する */
+}
+
+.partner-text {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
+    margin: 3px 0;
+}
+
+.partner-text:after {
+    content: "";
+    display: block;
+    border-bottom: 1px dotted #000;
+    width: 80%;
+    margin: 3px auto;
+}
+
+#main-banner {
+    width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+    height: 90px !important;
+    /* 強制的に高さを自動調整 */
+}
+
+.links {
+    color: #FFF;
+    background-color: #F0252E;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.3rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.copyright {
+    color: #FFF;
+    background-color: #F0252E;
+    font-size: 0.8rem;
+    text-align: center;
+    width: 100%;
+    padding: 1rem 0;
+    margin: 0;
+}
+
+.link-text {
+    vertical-align: middle;
+    text-decoration: underline;
+    color: #FFF;
+    font-size: 1.2rem;
+    text-align: center;
+    font-weight: bold;
+    /* 太字で強調 */
+    padding: 1rem 0;
+    margin-left: 6px;
+}
+
+.link-text.highlight {
+    background-color: #F57A7F;
+    /* 明るい黄色で目立たせる */
+    color: white;
+    /* 赤系のフォント色で全体のトーンを統一 */
+    font-size: 1.3rem;
+    /* やや大きめの文字サイズで強調 */
+    font-weight: bold;
+    /* 太字で目立たせる */
+    padding: 0.5rem 1rem;
+    /* 縦横にパディングを追加してクリックしやすく */
+    text-decoration: underline;
+    /* 下線付きでリンクらしさを強調 */
+    border-radius: 5px;
+    /* 背景色を使用するため角を丸く柔らかい印象 */
+    margin-left: 6px;
+    /* 他要素との適度な間隔 */
+    display: inline-block;
+    /* ボタン風の外観を実現 */
+    vertical-align: middle;
+    /* 他要素と整列 */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* ホバー効果をスムーズに */
+}
+
+.link-text.highlight:hover {
+    background-color: #FBD0D1;
+    /* ホバー時に濃い黄色系に変化 */
+    color: #FFF;
+    /* テキスト色を白に */
+    text-decoration: none;
+    /* 下線を消してホバー効果を強調 */
+}
+
+@media screen and (max-width: 350px) {
+    .link-text {
+        font-size: 1.1rem;
+        margin-left: 5px;
+    }
+
+    .link-text.highlight {
+        font-size: 1.2rem;
+        margin-left: 5px;
+    }
+}
+
+.links a:hover {
+    color: #FBD0D1;
+    outline: none;
+}
+
+.links a:focus {
+    color: #FFF;
+    outline: none;
+}
+
+
+#modal-map .modal-dialog {
+    width: 90%;
+    margin: 20px auto;
+    /* モーダルを中央に配置 */
+    height: 90vh;
+    /* モーダルの高さを画面全体に */
+    max-height: 90vh;
+    /* 縦幅が100vhを超えないように制限 */
+}
+
+#modal-map .modal-content {
+    height: 100%;
+    /* モーダルコンテンツが全体に広がるように */
+    display: flex;
+    flex-direction: column;
+    /* 子要素を縦方向に整列 */
+}
+
+#modal-map .modal-body.map-container {
+    flex-grow: 1;
+    /* 残りのスペースを全て埋める */
+    padding: 0;
+    /* パディングを無効化（地図が全体を埋めるように） */
+}
+
+#map {
+    height: 100%;
+    /* 親要素（modal-body）にフィット */
+    width: 100%;
+    /* 横幅も親要素にフィット */
+}
+
+.custom-close {
+    font-size: 2.5rem;
+    /* ボタンの文字を大きく */
+    color: #ff4444;
+    /* 文字色を赤に設定 */
+    background-color: #fff;
+    /* 背景色を白に設定 */
+    border: 2px solid #ff4444;
+    /* 赤いボーダーを追加 */
+    border-radius: 50%;
+    /* 丸い形にする */
+    width: 40px;
+    /* ボタンの幅 */
+    height: 40px;
+    /* ボタンの高さ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: absolute;
+    /* モーダル右上に配置 */
+    top: 10px;
+    /* モーダルの上からの位置 */
+    right: 10px;
+    /* モーダルの右からの位置 */
+    z-index: 1051;
+    /* モーダル内で最前面に表示 */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    /* ホバー時のスムーズな変化 */
+}
+
+.custom-close:hover {
+    background-color: #ff4444;
+    /* ホバー時の背景色を赤に */
+    color: #fff;
+    /* 文字色を白に変更 */
+}
+
+.custom-label {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.8);
+    ;
+    color: black;
+    border: 1px solid #ccc;
+    padding: 10px 10px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: bold;
+    white-space: nowrap;
+    transform: translate(-50%, -170%);
+    /* マーカーの上に配置 */
+    cursor: pointer;
+    z-index: 9999;
+    /* レイヤーの競合を防止 */
+}
+
+@media screen and (max-width: 500px) {
+    .custom-label {
+        padding: 4px 4px;
+        font-size: 11px;
+        transform: translate(-50%, -210%);
+    }
+}
+
+.modal-header {
+    padding: 8px 8px;
+}
+
+@media screen and (max-width: 960px) and (orientation: landscape) and (max-height: 480px) {
+    .modal-header {
+        padding: 4px 10px;
+    }
+
+    .custom-label {
+        padding: 4px 4px;
+        font-size: 11px;
+        transform: translate(-50%, -210%);
+    }
+}
