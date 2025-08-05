@@ -200,10 +200,14 @@ div#container .video{
     line-height: 1.2;
 }
 
+/* ticker の li 要素の初期状態を明確化 */
 .ticker ul li {
     width: 100%;
-    display: none;
+    display: none; /* 初期状態では非表示 */
     padding: 2px 0;
+    position: absolute; /* アニメーション用 */
+    top: 0;
+    left: 0;
 }
 
 .ticker ul li p{
