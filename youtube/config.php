@@ -1,6 +1,6 @@
 <?php
 // YouTube Data API設定
-define('YOUTUBE_API_KEY', 'YOUR_API_KEY_HERE'); // ← 取得したAPIキーを設定
+define('YOUTUBE_API_KEY', 'AIzaSyAllNww_mJg37m2XzX58wu0vPwRX-eBlvg'); // ← 取得したAPIキーを設定
 define('YOUTUBE_VIDEO_ID', 'JcqBwHddl6E'); // デフォルトのビデオID
 define('MAX_COMMENTS', 50); // 表示するコメント数
 define('CACHE_DURATION', 10); // キャッシュ時間（秒）
