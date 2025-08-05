@@ -535,10 +535,10 @@
       
       // tickerの高さも画面向きに応じて再調整
       if (window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches) {
-        // モバイル縦向きの場合、tickerの最小高さを確保
+        // モバイル縦向きの場合、tickerの最小高さを確保（1行表示用）
         var currentTickerHeight = $('#ticker').outerHeight();
-        if (currentTickerHeight < 40) {
-          $('#ticker').css('min-height', '40px');
+        if (currentTickerHeight < 24) {
+          $('#ticker').css('min-height', '24px');
         }
       }
     }
