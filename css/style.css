@@ -412,5 +412,43 @@ div#environment table tbody tr td p.danger{
   position: relative;
 }
 
+/* ==============================================
+   Notice（ticker）モバイル縦向け - 文字サイズ調整のみ
+   ============================================== */
+@media (max-width: 768px) and (orientation: portrait) {
+  .ticker > div#notice_title {
+    width: 4rem !important;
+    margin-right: 4px !important;
+    font-size: 12px !important;
+  }
+
+  .ticker ul li {
+    font-size: 13px !important;
+  }
+}
+
+/* より小さい画面での調整 */
+@media (max-width: 480px) and (orientation: portrait) {
+  .ticker > div#notice_title {
+    width: 3.5rem !important;
+    font-size: 11px !important;
+  }
+
+  .ticker ul li {
+    font-size: 12px !important;
+  }
+}
+
+/* モバイル横向けでの調整 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .ticker > div#notice_title {
+    font-size: 11px !important;
+  }
+
+  .ticker ul li {
+    font-size: 11px !important;
+  }
+}
+
 
 
