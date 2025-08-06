@@ -1,7 +1,7 @@
 <?php
 // YouTube Data API設定（フェーズ2：サーバーサイド一元化版）
 define('YOUTUBE_API_KEY', 'AIzaSyAllNww_mJg37m2XzX58wu0vPwRX-eBlvg'); // 動作確認済みAPIキー
-define('YOUTUBE_VIDEO_ID', 'BZeFTyeZi20'); // デフォルトのビデオID
+define('YOUTUBE_VIDEO_ID', 'JcqBwHddl6E'); // デフォルトのビデオID
 define('MAX_COMMENTS', 50); // 表示するコメント数
 define('CACHE_DURATION', 15); // キャッシュ時間（秒）
 define('UPDATE_INTERVAL', 15); // 更新間隔（秒）

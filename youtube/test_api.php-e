@@ -1,7 +1,7 @@
 <?php
 // YouTube API テストスクリプト
 $apiKey = 'AIzaSyAllNww_mJg37m2XzX58wu0vPwRX-eBlvg'; // ← 取得したAPIキーを入力
-$videoId = 'BZeFTyeZi20';
+$videoId = 'JcqBwHddl6E';
 
 // YouTube Video情報を取得してAPIキーをテスト
 $url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id={$videoId}&key={$apiKey}";
