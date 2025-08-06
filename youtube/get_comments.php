@@ -34,13 +34,18 @@ try {
     }
     
     // キャッシュの新鮮度チェック（5分以上古い場合は警告）
-    $cacheAge = time() - ($cacheData['timestamp'] ?? 0);
+    $cacheTimestamp = isset($cacheData['timestamp']) ? $cacheData['timestamp'] : 0;
+    $cacheAge = time() - $cacheTimestamp;
     if ($cacheAge > 300) {
         $cacheData['warning'] = 'Cache data is ' . round($cacheAge / 60) . ' minutes old. Daemon may not be running.';
     }
     
     // レスポンス送信
-    echo json_encode($cacheData, JSON_UNESCAPED_UNICODE);
+    if (defined('JSON_UNESCAPED_UNICODE')) {
+        echo json_encode($cacheData, JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode($cacheData);
+    }
     
 } catch (Exception $e) {
     // エラーレスポンス

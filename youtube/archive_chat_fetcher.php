@@ -51,17 +51,17 @@ class YouTubeArchiveChatFetcher {
     private function getInitialData() {
         $url = "https://www.youtube.com/watch?v=" . $this->videoId;
         
-        $context = stream_context_create([
-            'http' => [
+        $context = stream_context_create(array(
+            'http' => array(
                 'method' => 'GET',
-                'header' => [
+                'header' => array(
                     'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                     'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Language: en-US,en;q=0.5'
-                ],
+                ),
                 'timeout' => 30
-            ]
-        ]);
+            )
+        ));
         
         $html = file_get_contents($url, false, $context);
         if (!$html) {
@@ -131,30 +131,30 @@ class YouTubeArchiveChatFetcher {
      * サンプルコメントを生成（デモ用）
      */
     private function generateSampleComments($limit) {
-        $sampleComments = [
-            ['author' => '競馬ファン太郎', 'message' => '今日のレースも楽しみです！', 'time' => '14:25'],
-            ['author' => 'ケイバ好きママ', 'message' => '1番の馬が調子良さそう', 'time' => '14:26'],
-            ['author' => '船橋応援団', 'message' => 'がんばれー！', 'time' => '14:27'],
-            ['author' => '初心者です', 'message' => 'どの馬券がおすすめですか？', 'time' => '14:28'],
-            ['author' => 'ベテラン予想家', 'message' => '3-7-5の三連複が狙い目かも', 'time' => '14:29'],
-            ['author' => '地元民', 'message' => '船橋競馬場は雰囲気最高です', 'time' => '14:30'],
-            ['author' => 'スマホ視聴', 'message' => 'マルチアングル便利！', 'time' => '14:31'],
-            ['author' => '馬券師', 'message' => 'オッズが動いてきました', 'time' => '14:32'],
-            ['author' => '家族で視聴', 'message' => '子供も喜んでます', 'time' => '14:33'],
-            ['author' => '常連さん', 'message' => 'パドックの馬の動きがいいね', 'time' => '14:34']
-        ];
+        $sampleComments = array(
+            array('author' => '競馬ファン太郎', 'message' => '今日のレースも楽しみです！', 'time' => '14:25'),
+            array('author' => 'ケイバ好きママ', 'message' => '1番の馬が調子良さそう', 'time' => '14:26'),
+            array('author' => '船橋応援団', 'message' => 'がんばれー！', 'time' => '14:27'),
+            array('author' => '初心者です', 'message' => 'どの馬券がおすすめですか？', 'time' => '14:28'),
+            array('author' => 'ベテラン予想家', 'message' => '3-7-5の三連複が狙い目かも', 'time' => '14:29'),
+            array('author' => '地元民', 'message' => '船橋競馬場は雰囲気最高です', 'time' => '14:30'),
+            array('author' => 'スマホ視聴', 'message' => 'マルチアングル便利！', 'time' => '14:31'),
+            array('author' => '馬券師', 'message' => 'オッズが動いてきました', 'time' => '14:32'),
+            array('author' => '家族で視聴', 'message' => '子供も喜んでます', 'time' => '14:33'),
+            array('author' => '常連さん', 'message' => 'パドックの馬の動きがいいね', 'time' => '14:34')
+        );
         
-        $comments = [];
+        $comments = array();
         for ($i = 0; $i < min($limit, count($sampleComments)); $i++) {
             $sample = $sampleComments[$i % count($sampleComments)];
-            $comments[] = [
+            $comments[] = array(
                 'id' => 'sample_' . $i,
                 'author' => $sample['author'] . ($i > 9 ? ' #' . $i : ''),
                 'avatar' => 'https://via.placeholder.com/32/4a90e2/ffffff?text=' . substr($sample['author'], 0, 1),
                 'message' => $sample['message'],
                 'timestamp' => date('c', strtotime('-' . (count($sampleComments) - $i) . ' minutes')),
                 'time_display' => $sample['time']
-            ];
+            );
         }
         
         return $comments;

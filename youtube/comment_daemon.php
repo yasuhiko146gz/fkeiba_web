@@ -63,16 +63,20 @@ class YouTubeLiveCommentsFetcher {
             
             if (!empty($comments)) {
                 // キャッシュファイルに保存
-                $cacheData = [
+                $cacheData = array(
                     'success' => true,
                     'comments' => $comments,
                     'timestamp' => time(),
                     'updated_at' => date('Y-m-d H:i:s'),
                     'video_id' => YOUTUBE_VIDEO_ID,
                     'total_comments' => count($comments)
-                ];
+                );
                 
-                file_put_contents(COMMENTS_CACHE_FILE, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
+                if (defined('JSON_UNESCAPED_UNICODE')) {
+                    file_put_contents(COMMENTS_CACHE_FILE, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
+                } else {
+                    file_put_contents(COMMENTS_CACHE_FILE, json_encode($cacheData));
+                }
                 writeLog("Cached " . count($comments) . " comments");
             }
             
@@ -80,15 +84,19 @@ class YouTubeLiveCommentsFetcher {
             writeLog("Error fetching comments: " . $e->getMessage());
             
             // エラー情報をキャッシュに保存
-            $errorData = [
+            $errorData = array(
                 'success' => false,
                 'error' => $e->getMessage(),
                 'timestamp' => time(),
                 'updated_at' => date('Y-m-d H:i:s'),
-                'comments' => []
-            ];
+                'comments' => array()
+            );
             
-            file_put_contents(COMMENTS_CACHE_FILE, json_encode($errorData, JSON_UNESCAPED_UNICODE));
+            if (defined('JSON_UNESCAPED_UNICODE')) {
+                file_put_contents(COMMENTS_CACHE_FILE, json_encode($errorData, JSON_UNESCAPED_UNICODE));
+            } else {
+                file_put_contents(COMMENTS_CACHE_FILE, json_encode($errorData));
+            }
         }
     }
     
@@ -125,19 +133,20 @@ class YouTubeLiveCommentsFetcher {
         }
         
         // 次回用のページトークンを保存
-        $this->nextPageToken = $response['nextPageToken'] ?? '';
+        $this->nextPageToken = isset($response['nextPageToken']) ? $response['nextPageToken'] : '';
         
         // コメントデータを整形
-        $comments = [];
+        $comments = array();
         foreach ($response['items'] as $item) {
-            $comments[] = [
+            $avatar = isset($item['authorDetails']['profileImageUrl']) ? $item['authorDetails']['profileImageUrl'] : '';
+            $comments[] = array(
                 'id' => $item['id'],
                 'author' => $item['authorDetails']['displayName'],
-                'avatar' => $item['authorDetails']['profileImageUrl'] ?? '',
+                'avatar' => $avatar,
                 'message' => $item['snippet']['displayMessage'],
                 'timestamp' => $item['snippet']['publishedAt'],
                 'time_display' => $this->formatTime($item['snippet']['publishedAt'])
-            ];
+            );
         }
         
         return $comments;
@@ -147,16 +156,16 @@ class YouTubeLiveCommentsFetcher {
      * APIリクエストを実行
      */
     private function makeApiRequest($url) {
-        $context = stream_context_create([
-            'http' => [
+        $context = stream_context_create(array(
+            'http' => array(
                 'method' => 'GET',
-                'header' => [
+                'header' => array(
                     'User-Agent: YouTube Live Comments Fetcher',
                     'Accept: application/json'
-                ],
+                ),
                 'timeout' => 30
-            ]
-        ]);
+            )
+        ));
         
         $response = file_get_contents($url, false, $context);
         

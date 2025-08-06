@@ -28,8 +28,10 @@ try {
         echo "<h3>キャッシュ結果:</h3>";
         echo "<pre>";
         echo "成功: " . ($cacheData['success'] ? 'Yes' : 'No') . "\n";
-        echo "コメント数: " . count($cacheData['comments'] ?? []) . "\n";
-        echo "更新時刻: " . ($cacheData['updated_at'] ?? 'N/A') . "\n";
+        $commentsCount = isset($cacheData['comments']) ? count($cacheData['comments']) : 0;
+        echo "コメント数: " . $commentsCount . "\n";
+        $updatedAt = isset($cacheData['updated_at']) ? $cacheData['updated_at'] : 'N/A';
+        echo "更新時刻: " . $updatedAt . "\n";
         
         if (!empty($cacheData['error'])) {
             echo "エラー: " . $cacheData['error'] . "\n";

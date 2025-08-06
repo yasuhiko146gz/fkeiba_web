@@ -19,17 +19,17 @@ if (!preg_match('/^AIza[0-9A-Za-z_-]{35}$/', $apiKey)) {
 }
 
 // コンテキストオプションを設定してより詳細なエラー情報を取得
-$context = stream_context_create([
-    'http' => [
+$context = stream_context_create(array(
+    'http' => array(
         'method' => 'GET',
-        'header' => [
+        'header' => array(
             'User-Agent: PHP YouTube API Test',
             'Accept: application/json'
-        ],
+        ),
         'timeout' => 30,
         'ignore_errors' => true // HTTPエラーでも内容を取得
-    ]
-]);
+    )
+));
 
 // YouTube Video情報を取得してAPIキーをテスト
 $url = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id={$videoId}&key={$apiKey}";
@@ -41,7 +41,7 @@ echo "<code style='word-break: break-all;'>{$url}</code>";
 echo "<h3>📡 API呼び出し結果</h3>";
 
 $response = file_get_contents($url, false, $context);
-$httpResponseHeader = $http_response_header ?? [];
+$httpResponseHeader = isset($http_response_header) ? $http_response_header : array();
 
 // HTTPレスポンスヘッダーを表示
 echo "<h4>HTTPレスポンスヘッダー:</h4>";
@@ -99,7 +99,17 @@ if ($response === false) {
 
 echo "<hr>";
 echo "<h3>📄 完全なレスポンス:</h3>";
-echo "<pre>" . ($response ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : 'レスポンスなし') . "</pre>";
+if ($response) {
+    if (defined('JSON_PRETTY_PRINT') && defined('JSON_UNESCAPED_UNICODE')) {
+        echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>";
+    } else if (defined('JSON_PRETTY_PRINT')) {
+        echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT) . "</pre>";
+    } else {
+        echo "<pre>" . json_encode($data) . "</pre>";
+    }
+} else {
+    echo "<pre>レスポンスなし</pre>";
+}
 
 // 追加の診断情報
 echo "<hr>";

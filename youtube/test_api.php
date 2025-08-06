@@ -24,5 +24,11 @@ if (isset($data['error'])) {
 
 echo "<hr>";
 echo "<h3>レスポンス詳細:</h3>";
-echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>";
+if (defined('JSON_PRETTY_PRINT') && defined('JSON_UNESCAPED_UNICODE')) {
+    echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>";
+} else if (defined('JSON_PRETTY_PRINT')) {
+    echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT) . "</pre>";
+} else {
+    echo "<pre>" . json_encode($data) . "</pre>";
+}
 ?>
