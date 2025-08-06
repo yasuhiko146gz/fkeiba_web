@@ -1,0 +1,178 @@
+<?php
+require_once 'config.php';
+
+class YouTubeCommentFetcher {
+    private $cacheFile;
+    private $errorLogFile;
+    
+    public function __construct() {
+        $this->cacheFile = __DIR__ . '/comments_cache.json';
+        $this->errorLogFile = __DIR__ . '/youtube_errors.log';
+    }
+    
+    public function fetchAndCacheComments($videoId = null) {
+        $videoId = $videoId ?: YOUTUBE_VIDEO_ID;
+        
+        try {
+            // キャッシュチェック
+            if ($this->isCacheValid()) {
+                return $this->getCachedComments();
+            }
+            
+            // YouTube API呼び出し
+            $comments = $this->fetchFromYouTubeAPI($videoId);
+            
+            // キャッシュに保存
+            $this->saveToCache($comments);
+            
+            return [
+                'success' => true,
+                'comments' => $comments,
+                'cached' => false,
+                'timestamp' => time(),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+        } catch (Exception $e) {
+            $this->logError($e->getMessage());
+            
+            // エラー時は古いキャッシュを返す（あれば）
+            $cachedData = $this->getCachedComments(true);
+            if ($cachedData) {
+                $cachedData['error'] = 'API Error: ' . $e->getMessage();
+                return $cachedData;
+            }
+            
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'comments' => [],
+                'timestamp' => time()
+            ];
+        }
+    }
+    
+    private function fetchFromYouTubeAPI($videoId) {
+        // Step 1: Live Chat IDを取得
+        $videoUrl = YOUTUBE_API_BASE . "videos?part=liveStreamingDetails&id=" . $videoId . "&key=" . YOUTUBE_API_KEY;
+        
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'user_agent' => 'FunabashiKeiba YouTube Comments'
+            ]
+        ]);
+        
+        $videoResponse = file_get_contents($videoUrl, false, $context);
+        if ($videoResponse === false) {
+            throw new Exception('Failed to fetch video information');
+        }
+        
+        $videoData = json_decode($videoResponse, true);
+        
+        if (!isset($videoData['items'][0]['liveStreamingDetails']['activeLiveChatId'])) {
+            // ライブ配信中でない場合、空の配列を返す
+            return [];
+        }
+        
+        $liveChatId = $videoData['items'][0]['liveStreamingDetails']['activeLiveChatId'];
+        
+        // Step 2: Live Chatメッセージを取得
+        $chatUrl = YOUTUBE_API_BASE . "liveChat/messages?liveChatId=" . $liveChatId . 
+                   "&part=snippet,authorDetails&maxResults=" . MAX_COMMENTS . "&key=" . YOUTUBE_API_KEY;
+        
+        $chatResponse = file_get_contents($chatUrl, false, $context);
+        if ($chatResponse === false) {
+            throw new Exception('Failed to fetch chat messages');
+        }
+        
+        $chatData = json_decode($chatResponse, true);
+        
+        if (isset($chatData['error'])) {
+            throw new Exception('YouTube API Error: ' . $chatData['error']['message']);
+        }
+        
+        if (!isset($chatData['items'])) {
+            return [];
+        }
+        
+        // Step 3: コメントデータを整形
+        $comments = [];
+        foreach ($chatData['items'] as $item) {
+            $comments[] = [
+                'id' => $item['id'],
+                'author' => $item['authorDetails']['displayName'],
+                'avatar' => $item['authorDetails']['profileImageUrl'] ?? '',
+                'message' => $item['snippet']['displayMessage'],
+                'timestamp' => $item['snippet']['publishedAt'],
+                'time_display' => date('H:i', strtotime($item['snippet']['publishedAt'])),
+                'super_chat' => isset($item['snippet']['superChatDetails']),
+                'member' => $item['authorDetails']['isChatSponsor'] ?? false
+            ];
+        }
+        
+        // 新しいコメントを下に表示するため並び順を調整
+        return array_reverse($comments);
+    }
+    
+    private function isCacheValid() {
+        if (!file_exists($this->cacheFile)) {
+            return false;
+        }
+        
+        $lastModified = filemtime($this->cacheFile);
+        return (time() - $lastModified) < CACHE_DURATION;
+    }
+    
+    private function getCachedComments($ignoreExpiry = false) {
+        if (!file_exists($this->cacheFile)) {
+            return null;
+        }
+        
+        if (!$ignoreExpiry && !$this->isCacheValid()) {
+            return null;
+        }
+        
+        $data = json_decode(file_get_contents($this->cacheFile), true);
+        if ($data) {
+            $data['cached'] = true;
+            return $data;
+        }
+        
+        return null;
+    }
+    
+    private function saveToCache($comments) {
+        $data = [
+            'success' => true,
+            'comments' => $comments,
+            'cached' => false,
+            'timestamp' => time(),
+            'updated_at' => date('Y-m-d H:i:s'),
+            'video_id' => YOUTUBE_VIDEO_ID,
+            'comment_count' => count($comments)
+        ];
+        
+        file_put_contents($this->cacheFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+    
+    private function logError($message) {
+        $logMessage = date('Y-m-d H:i:s') . " - " . $message . PHP_EOL;
+        file_put_contents($this->errorLogFile, $logMessage, FILE_APPEND | LOCK_EX);
+    }
+}
+
+// CLI実行時の処理（デーモン用）
+if (php_sapi_name() === 'cli') {
+    $fetcher = new YouTubeCommentFetcher();
+    $result = $fetcher->fetchAndCacheComments();
+    
+    echo "[" . date('Y-m-d H:i:s') . "] ";
+    if ($result['success']) {
+        echo "Comments updated: " . count($result['comments']) . " items";
+    } else {
+        echo "Error: " . $result['error'];
+    }
+    echo "\n";
+}
+?>

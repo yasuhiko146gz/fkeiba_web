@@ -70,10 +70,14 @@
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/lib/platform.js"></script>
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/embed.min.js"></script>
 
+  <!-- YouTube Liveコメント表示CSS -->
+  <link href="./css/youtube-comments.css" rel="stylesheet" type="text/css">
   <!-- main style -->
   <link href="./css/style.css" rel="stylesheet" type="text/css">
   <!-- main js -->
   <script type="text/javascript" src="./js/main.js"> </script>
+  <!-- YouTube Liveコメント表示JS -->
+  <script type="text/javascript" src="./js/youtube-comments.js"> </script>
 
 </head>
 
@@ -106,6 +110,9 @@
       <div id='fvPlayer'></div>
       <div id="cover"><span></span></div>
     </div>
+    
+    <!-- YouTube Liveコメント表示エリア -->
+    <div id="youtube-comments-container"></div>
   </div>
 
   <!-- ヘルプ -->
