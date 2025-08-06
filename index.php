@@ -310,7 +310,7 @@
             level: 3,
             tag: 'main',
             isMain: true,
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv1.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
           },
           {
             caption: '出走表',
@@ -318,7 +318,7 @@
             y: 0,
             level: 1,
             tag: 'camera1',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv1.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
           },
           {
             caption: '本場映像',
@@ -326,7 +326,7 @@
             y: 1,
             level: 1,
             tag: 'camera2',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv2.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv2.smil/playlist.m3u8'
           },
           {
             caption: 'オッズ',
@@ -334,7 +334,7 @@
             y: 2,
             level: 1,
             tag: 'camera3',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv3.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv3.smil/playlist.m3u8'
           },
           {
             caption: 'ハートビートライブ',
@@ -343,7 +343,7 @@
             level: 1,
             tag: 'camera4',
             defaultView: true,
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv4.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv4.smil/playlist.m3u8'
           },
           {
             caption: 'パドック③',
@@ -351,7 +351,7 @@
             y: 3,
             level: 1,
             tag: 'camera5',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv5.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv5.smil/playlist.m3u8'
           },
           {
             caption: 'パドック②',
@@ -359,7 +359,7 @@
             y: 3,
             level: 1,
             tag: 'camera6',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv6.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv6.smil/playlist.m3u8'
           },
           {
             caption: 'パドック①',
@@ -367,7 +367,7 @@
             y: 3,
             level: 1,
             tag: 'camera7',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/livecf/smil:fv7.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv7.smil/playlist.m3u8'
           }
         ],
 
