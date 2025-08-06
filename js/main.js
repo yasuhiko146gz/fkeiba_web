@@ -17,26 +17,42 @@ var iphone_version = function(){
 
 }
 
-
-$(window).on('resize', function(){
+// レスポンシブレイアウト用のリサイズ処理
+function updatePlayerLayout() {
+  var $videoArea = $('.video-player-area');
+  var $video = $('#container .video');
+  var $cover = $("#cover");
+  
+  if ($videoArea.length === 0 || $video.length === 0) {
+    return; // 要素が見つからない場合は何もしない
+  }
+  
   var coverFontBase = 20;
-  var coverFontSize = coverFontBase * ($(video).width() / 900);
-  var coverHeight = $(video).width() * 9 / 16;
-  $("#cover").css("font-size",coverFontSize + "px");
-  $("#cover").css("height", coverHeight+"px");
-  //console.log("document.onResize set cover.height="+coverHeight);
+  var videoWidth = $video.width();
+  var coverFontSize = coverFontBase * (videoWidth / 900);
+  var coverHeight = videoWidth * 9 / 16;
+  
+  $cover.css("font-size", coverFontSize + "px");
+  $cover.css("height", coverHeight + "px");
+  
+  // デバッグログ（必要に応じて有効化）
+  // console.log("updatePlayerLayout: videoWidth=" + videoWidth + ", coverHeight=" + coverHeight);
+}
+
+// ウィンドウリサイズ時の処理
+$(window).on('resize', function(){
+  updatePlayerLayout();
 });
 
 $(document).ready(function(){
   video = $('#container .video');
-  var coverFontBase = 20;
-  var coverFontSize = coverFontBase * ($(video).width() / 900);
-  var coverHeight = $(video).width() * 9 / 16;
-  $("#cover").css("font-size",coverFontSize + "px");
-  $("#cover").css("height", coverHeight+"px");
-  //console.log("document.onResize set cover.height="+coverHeight);
+  updatePlayerLayout();
+  
+  // YouTubeコメント欄のレスポンシブ動作確認（デバッグ用）
+  if (window.console && window.console.log) {
+    console.log("Responsive layout initialized");
+  }
 });
-
 
 /**
  *config

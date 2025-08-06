@@ -106,13 +106,24 @@
       <ul></ul>
     </div>
 
-    <div class="video">
-      <div id='fvPlayer'></div>
-      <div id="cover"><span></span></div>
+    <!-- メインコンテンツラッパー -->
+    <div class="main-content-wrapper">
+      <!-- プレーヤーとコメントのレスポンシブコンテナ -->
+      <div class="player-comments-container">
+        <!-- プレーヤーエリア -->
+        <div class="video-player-area">
+          <div class="video">
+            <div id='fvPlayer'></div>
+            <div id="cover"><span></span></div>
+          </div>
+        </div>
+        
+        <!-- YouTube Liveコメントエリア -->
+        <div class="youtube-comments-wrapper">
+          <div id="youtube-comments-container"></div>
+        </div>
+      </div>
     </div>
-    
-    <!-- YouTube Liveコメント表示エリア -->
-    <div id="youtube-comments-container"></div>
   </div>
 
   <!-- ヘルプ -->
@@ -525,22 +536,37 @@
       }
 
       if ($('#fvPlayer').is(':visible')) {
+        // レスポンシブレイアウト対応：プレーヤーエリアの幅を基準にする
+        var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
+        
+        // 1024px以上の場合は、コメント欄分の幅を考慮
+        if (windowWidth >= 1024) {
+          // コメント欄とgapの幅を引く（最大400px + gap24px = 424px）
+          var availableWidth = Math.min(playerAreaWidth, windowWidth - 424);
+        } else {
+          var availableWidth = playerAreaWidth;
+        }
+        
         new_width = (contentHeight - 47) * 16 / 9;
-        //console.log("contentHeight:" + contentHeight + " contentHight-47:" + (contentHeight - 47) + " new_width:" + new_width);
-        if (new_width < windowWidth) {
+        //console.log("contentHeight:" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+        
+        if (new_width < availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice()) {
             new_width = windowHeight * 16 / 9;
-            $('#fvPlayer').width(new_width + 'px');
+            $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
           } else {
             $('#fvPlayer').width(new_width + 'px');
           }
         } else {
-          $('#fvPlayer').width(windowWidth + 'px');
+          $('#fvPlayer').width(availableWidth + 'px');
         }
       }
       
-
+      // main.jsの関数も呼び出してレイアウトを同期
+      if (typeof updatePlayerLayout === 'function') {
+        updatePlayerLayout();
+      }
     }
 
     new FvPollingLib({
