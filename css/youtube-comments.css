@@ -24,22 +24,24 @@
         flex-direction: row;
         align-items: flex-start;
         gap: 24px;
+        justify-content: space-between; /* プレーヤーとコメント欄を両端に配置 */
     }
     
-    /* プレーヤーエリア：約70% */
+    /* プレーヤーエリア：残り領域を占有 */
     .video-player-area {
         flex: 1;
         min-width: 0; /* flexboxでのオーバーフロー回避 */
-        max-width: calc(100% - 424px); /* コメント欄最大幅(400px) + gap(24px) を引く */
+        margin-right: 0; /* 右マージンをリセット */
     }
     
-    /* コメントエリア：最小300px、最大400px */
+    /* コメントエリア：固定幅で右寄せ */
     .youtube-comments-wrapper {
-        flex: 0 0 auto;
-        width: clamp(300px, 30%, 400px); /* 最小300px、理想30%、最大400px */
+        flex: 0 0 400px; /* 固定幅400px */
+        width: 400px;
         min-height: 500px; /* プレーヤー高さに合わせる */
         position: sticky;
         top: 20px; /* スクロール時に上部に固定 */
+        margin-left: auto; /* 右寄せ */
     }
     
     /* プレーヤー自体のサイズ調整 */
@@ -56,6 +58,24 @@
     }
 }
 
+/* 狭いデスクトップ画面での調整 (1024px-1440px) */
+@media (min-width: 1024px) and (max-width: 1440px) {
+    /* コメント欄が狭い場合の最小幅保証 */
+    .youtube-comments-wrapper {
+        flex: 0 0 300px; /* 最小300px */
+        width: 300px;
+        min-width: 300px;
+    }
+}
+
+/* 幅広デスクトップ画面での調整 (1440px以上) */
+@media (min-width: 1441px) {
+    .youtube-comments-wrapper {
+        flex: 0 0 400px; /* 400px固定 */
+        width: 400px;
+    }
+}
+
 /* 1024px未満：縦並びレイアウト */
 @media (max-width: 1023px) {
     .player-comments-container {
@@ -69,7 +89,8 @@
     
     .youtube-comments-wrapper {
         width: 100%;
-        min-width: 300px;
+        min-width: 300px; /* 最小幅を保つ */
+        margin-left: 0; /* 左寄せにリセット */
     }
     
     /* モバイル向けパディング調整 */

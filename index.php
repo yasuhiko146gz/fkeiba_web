@@ -541,8 +541,18 @@
         
         // 1024px以上の場合は、コメント欄分の幅を考慮
         if (windowWidth >= 1024) {
-          // コメント欄とgapの幅を引く（最大400px + gap24px = 424px）
-          var availableWidth = Math.min(playerAreaWidth, windowWidth - 424);
+          // 画面幅に応じてコメント欄幅を計算
+          var commentWidth;
+          if (windowWidth <= 1440) {
+            commentWidth = 300; // 1024px-1440px: 300px
+          } else {
+            commentWidth = 400; // 1441px以上: 400px
+          }
+          
+          // コメント欄 + gapを引く
+          var availableWidth = windowWidth - (commentWidth + 24);
+          // プレーヤーエリアの実際の幅と比較して小さい方を使用
+          availableWidth = Math.min(availableWidth, playerAreaWidth);
         } else {
           var availableWidth = playerAreaWidth;
         }
