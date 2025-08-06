@@ -293,7 +293,7 @@
         disableSeek: false,
         enableShare: false,
         isTheaterModeEnable: true,
-        isLive: true,
+        isLive: false,
         enableMMS: true,
         showLicensee: false,
         autoplay: false,
