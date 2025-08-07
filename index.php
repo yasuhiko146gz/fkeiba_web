@@ -500,14 +500,72 @@
             $('#header-container').hide();
             $('#ticker').hide();
             //$('.archive-notice').hide();
+            
+            // iPhone Safari URLバー自動非表示機能
+            handleUrlBarAutoHide();
           } else {
             $('#header-container').show();
             $('#ticker').show();
             //$('.archive-notice').show();
+            
+            // 縦向き時はiOS用CSSクラスを削除
+            if (isIOSDevice()) {
+              document.body.classList.remove('ios-landscape');
+            }
           }
         }
         adjustCoverImageHeight();
       }
+    }
+
+    /**
+     * iPhone Safari URLバー自動非表示処理
+     */
+    function handleUrlBarAutoHide() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        return;
+      }
+      
+      // iOS用CSSクラスを追加
+      document.body.classList.add('ios-landscape');
+      
+      // 少し遅延してからURLバー隠し処理を実行
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+      }, 150);
+      
+      // 念のため追加で実行（端末によってタイミングが異なる場合がある）
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+      }, 400);
+    }
+
+    /**
+     * URLバーが表示されている場合に隠す処理
+     */
+    function hideUrlBarIfNeeded() {
+      // URLバー表示状態をチェック
+      if (isUrlBarVisible()) {
+        // 微小なスクロールでURLバーを隠す
+        window.scrollTo(0, 1);
+        
+        // デバッグログ
+        console.log('URLバー非表示処理を実行しました');
+      }
+    }
+
+    /**
+     * URLバーが表示されているかを判定
+     * @return {boolean} true: 表示中, false: 非表示
+     */
+    function isUrlBarVisible() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        return false;
+      }
+      
+      // 画面の幅と高さの差でURLバーの表示状態を判定
+      var heightDiff = screen.width - window.innerHeight;
+      return heightDiff > 20;
     }
 
     // 端末向き変更時のイベント登録 複数イベントで登録し、ハンドラ側でデバウンス処理を行う
@@ -520,6 +578,17 @@
     window.addEventListener('resize', handleOrientationChange, false);
     if (window.visualViewport) {
       visualViewport.addEventListener('resize', handleOrientationChange, false);
+    }
+    
+    // URLバー状態変化の監視（iOS用）
+    if (isIOSDevice()) {
+      window.addEventListener('resize', function() {
+        // URLバーが隠れた後の処理
+        if (isMobileLandScape() && !isUrlBarVisible()) {
+          // レイアウト再調整
+          setTimeout(adjustCoverImageHeight, 100);
+        }
+      });
     }
 
     function adjustCoverImageHeight() {

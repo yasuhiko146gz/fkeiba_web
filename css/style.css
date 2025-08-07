@@ -473,5 +473,22 @@ div#environment table tbody tr td p.danger{
   }
 }
 
+/* ==============================================
+   iPhone Safari URLバー自動非表示機能
+   ============================================== */
+/* iPhone横向き時のURLバー非表示対応 */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* iOSデバイスでのみ適用される設定 */
+  .ios-landscape body {
+    height: calc(100vh + 1px) !important;
+    overflow-y: auto !important;
+  }
+  
+  /* コンテナの高さ調整 */
+  .ios-landscape #container {
+    min-height: 100vh !important;
+  }
+}
+
 
 
