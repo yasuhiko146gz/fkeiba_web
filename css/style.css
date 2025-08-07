@@ -73,6 +73,13 @@ div#container .video{
   div#container .video {
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* プレーヤー要素も確実に幅100%にする */
+  #fvPlayer {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
