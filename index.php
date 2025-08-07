@@ -499,14 +499,14 @@
           if (getOrientation() == "landscape") {
             $('#header-container').hide();
             $('#ticker').hide();
-            //$('.archive-notice').hide();
+            $('.archive-notice').hide();
             
             // iPhone Safari URLバー自動非表示機能
             handleUrlBarAutoHide();
           } else {
             $('#header-container').show();
             $('#ticker').show();
-            //$('.archive-notice').show();
+            $('.archive-notice').show();
             
             // 縦向き時はiOS用CSSクラスを削除
             if (isIOSDevice()) {
