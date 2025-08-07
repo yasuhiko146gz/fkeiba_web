@@ -462,9 +462,12 @@
             $('#ticker').show();
             $('.archive-notice').show();
             
-            // 縦向き時はiOS用CSSクラスを削除
+            // 縦向き時はiOS用CSSクラスとスタイルを削除
             if (isIOSDevice()) {
               document.body.classList.remove('ios-landscape');
+              document.body.style.height = '';
+              document.body.style.overflowY = '';
+              console.log('ios-landscapeクラスとスタイルを削除しました');
             }
           }
         }
@@ -476,12 +479,26 @@
      * iPhone Safari URLバー自動非表示処理
      */
     function handleUrlBarAutoHide() {
+      console.log('handleUrlBarAutoHide呼び出し:', {
+        isIOSDevice: isIOSDevice(),
+        isMobileLandScape: isMobileLandScape(),
+        orientation: getOrientation(),
+        userAgent: navigator.userAgent
+      });
+      
       if (!isIOSDevice() || !isMobileLandScape()) {
+        console.log('iOSまたは横向きではないため、URLバー非表示処理をスキップ');
         return;
       }
       
-      // iOS用CSSクラスを追加
+      // CSSクラスとJavaScriptで両方からスタイルを適用して確実にスクロール可能状態を作る
       document.body.classList.add('ios-landscape');
+      document.body.style.height = 'calc(100vh + 1px)';
+      document.body.style.overflowY = 'auto';
+      console.log('ios-landscapeクラスとスタイルを追加しました');
+      
+      // 即座に実行
+      hideUrlBarIfNeeded();
       
       // 少し遅延してからURLバー隠し処理を実行
       setTimeout(function() {
@@ -492,6 +509,11 @@
       setTimeout(function() {
         hideUrlBarIfNeeded();
       }, 400);
+      
+      // さらに遅延して実行
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+      }, 800);
     }
 
     /**
@@ -499,12 +521,23 @@
      */
     function hideUrlBarIfNeeded() {
       // URLバー表示状態をチェック
-      if (isUrlBarVisible()) {
+      var urlBarVisible = isUrlBarVisible();
+      var heightDiff = screen.width - window.innerHeight;
+      
+      console.log('hideUrlBarIfNeeded呼び出し:', {
+        urlBarVisible: urlBarVisible,
+        screenWidth: screen.width,
+        windowInnerHeight: window.innerHeight,
+        heightDiff: heightDiff,
+        threshold: 20
+      });
+      
+      if (urlBarVisible) {
         // 微小なスクロールでURLバーを隠す
         window.scrollTo(0, 1);
-        
-        // デバッグログ
-        console.log('URLバー非表示処理を実行しました');
+        console.log('window.scrollTo(0, 1)を実行しました');
+      } else {
+        console.log('URLバーはすでに非表示です');
       }
     }
 
