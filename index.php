@@ -96,9 +96,9 @@
         </ul>
       </nav>
     </header>
-    <!-- <div class="archive-notice">
+    <div class="archive-notice">
       ※現在は録画配信中です (2025年7月6日分)
-    </div> -->
+    </div>
     <div id="ticker" class="ticker" rel="slide">
       <div id="notice_title">
         <span>#Notice</span>
