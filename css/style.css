@@ -63,6 +63,19 @@ div#container .video{
   box-sizing:border-box;
 }
 
+/* モバイル縦向き時のvideo要素の余白削除 */
+@media (max-width: 768px) and (orientation: portrait) {
+  div#container {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  div#container .video {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
 /* ==============================================
    モバイル縦向け専用スタイル（768px以下）
    ============================================== */

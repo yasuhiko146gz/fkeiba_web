@@ -99,6 +99,24 @@
     }
 }
 
+/* モバイル縦向き専用：完全に余白なし */
+@media (max-width: 768px) and (orientation: portrait) {
+    .main-content-wrapper {
+        padding: 0 !important;
+    }
+    
+    .player-comments-container {
+        gap: 10px;
+    }
+    
+    .video-player-area,
+    .youtube-comments-wrapper {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
 /* YouTube Liveコメント表示スタイル（レスポンシブ対応版） */
 .youtube-comments-container {
     width: 100%;
@@ -308,7 +326,7 @@
 /* モバイル対応（768px以下） */
 @media (max-width: 768px) {
     .youtube-comments-container {
-        margin-top: 10px;
+        margin-top: 0;
         max-height: 300px;
         border-radius: 6px;
     }
