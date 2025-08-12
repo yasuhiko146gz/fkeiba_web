@@ -60,12 +60,12 @@
     gtag('js', new Date());
 
     gtag('config', 'G-HRW2S9NW67');
-</script>
+  </script>
 
   <!-- fvLivePlayer -->
   <script src="./js/fvLivePlayer/lib/platform.js"></script>
   <script src="./js/fvLivePlayer/embed.min.js"></script>
-<!--
+  <!--
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/lib/platform.js"></script>
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/embed.min.js"></script>
   -->
@@ -303,7 +303,7 @@
         row: 4,
         col: 4,
         isDebug: true,
-        gaTrackingId : "G-HRW2S9NW67",
+        gaTrackingId: "G-HRW2S9NW67",
         thumb_key: "./js/fvLivePlayer/img/fkeiba_0730.jpg",
         statsInterval: 10,
         contentID: "fk2025",
@@ -514,10 +514,7 @@
             // 縦向き時はiOS用CSSクラスを削除
             if (isIOSDevice()) {
               document.body.classList.remove('ios-landscape');
-<<<<<<< HEAD
-=======
               document.body.classList.remove('ios-landscape-url-hidden');
->>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
             }
 
             // モバイル縦向き時の透明iframe制御
@@ -539,11 +536,7 @@
       // iOS用CSSクラスを追加
       document.body.classList.add('ios-landscape');
 
-<<<<<<< HEAD
-      // 少し遅延してからURLバー隠し処理を実行
-=======
       // 自動的にURLバーを隠す処理を実行
->>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
       setTimeout(function() {
         autoHideUrlBar();
       }, 150);
@@ -552,8 +545,6 @@
       setTimeout(function() {
         autoHideUrlBar();
       }, 400);
-<<<<<<< HEAD
-=======
     }
 
     /**
@@ -586,16 +577,16 @@
       }
 
       var urlBarVisible = isUrlBarVisible();
-      
+
       if (urlBarVisible) {
         // URLバー表示中：スクロール可能状態
         document.body.classList.remove('ios-landscape-url-hidden');
-        
+
         // プレーヤーに通常モードを通知
         if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
           player_ref.setTouchActionMode('normal');
         }
-        
+
         // まだ表示されている場合は再試行
         setTimeout(function() {
           autoHideUrlBar();
@@ -603,15 +594,14 @@
       } else {
         // URLバー非表示：スクロール禁止状態
         document.body.classList.add('ios-landscape-url-hidden');
-        
+
         // プレーヤーに制限モードを通知
         if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
           player_ref.setTouchActionMode('restricted');
         }
-        
+
         console.log('URLバー非表示検出：スクロール制御を適用');
       }
->>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
     }
 
     /**
@@ -643,61 +633,61 @@
     }
 
     /**
-    * モバイル縦向き時の透明iframeサイズ調整
-    */
+     * モバイル縦向き時の透明iframeサイズ調整
+     */
     function handleMobilePortraitIframe() {
-    const mobileIframe = document.getElementById('mobile-overlay-iframe');
+      const mobileIframe = document.getElementById('mobile-overlay-iframe');
 
-    if (isMobileDevice() && getOrientation() === 'portrait') {
-    // プレーヤーが表示されているかチェック
-    const isPlayerVisible = $('#fvPlayer').is(':visible');
+      if (isMobileDevice() && getOrientation() === 'portrait') {
+        // プレーヤーが表示されているかチェック
+        const isPlayerVisible = $('#fvPlayer').is(':visible');
 
-    if (isPlayerVisible) {
-    // ヘッダー高さを取得
-    const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
+        if (isPlayerVisible) {
+          // ヘッダー高さを取得
+          const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
 
-    // ティッカー高さを取得
-    const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
+          // ティッカー高さを取得
+          const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
 
-    // アーカイブ通知高さを取得
-    const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
+          // アーカイブ通知高さを取得
+          const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
 
-    // プレーヤー高さを取得
-    const playerHeight = $('.video-player-area').outerHeight() || 0;
+          // プレーヤー高さを取得
+          const playerHeight = $('.video-player-area').outerHeight() || 0;
 
-    // 画面全体の高さ
-    const windowHeight = window.innerHeight;
+          // 画面全体の高さ
+          const windowHeight = window.innerHeight;
 
-    // プレーヤーの下から開始するtop位置を計算
-    const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
+          // プレーヤーの下から開始するtop位置を計算
+          const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
 
-    // 残りの高さを計算
-    const remainingHeight = windowHeight - iframeTop;
+          // 残りの高さを計算
+          const remainingHeight = windowHeight - iframeTop;
 
-    // 残りの高さ + 10pxでiframeの高さを設定
-    const iframeHeight = remainingHeight + 10;
+          // 残りの高さ + 10pxでiframeの高さを設定
+          const iframeHeight = remainingHeight + 10;
 
-    mobileIframe.style.top = iframeTop + 'px';
-    mobileIframe.style.height = iframeHeight + 'px';
+          mobileIframe.style.top = iframeTop + 'px';
+          mobileIframe.style.height = iframeHeight + 'px';
 
-    // ページ全体の高さをiframeの最下部まで含むように設定
-    const totalPageHeight = iframeTop + iframeHeight;
-    document.body.style.minHeight = totalPageHeight + 'px';
-    document.getElementById('container').style.minHeight = totalPageHeight + 'px';
+          // ページ全体の高さをiframeの最下部まで含むように設定
+          const totalPageHeight = iframeTop + iframeHeight;
+          document.body.style.minHeight = totalPageHeight + 'px';
+          document.getElementById('container').style.minHeight = totalPageHeight + 'px';
 
-    // デバッグ情報をコンソールに出力
-    console.log('iframe調整:', {
-    windowHeight: windowHeight,
-    headerHeight: headerHeight,
-    tickerHeight: tickerHeight,
-      archiveNoticeHeight: archiveNoticeHeight,
-        playerHeight: playerHeight,
-      iframeTop: iframeTop,
-      remainingHeight: remainingHeight,
-      iframeHeight: iframeHeight,
-        totalPageHeight: totalPageHeight
-        });
-      } else {
+          // デバッグ情報をコンソールに出力
+          console.log('iframe調整:', {
+            windowHeight: windowHeight,
+            headerHeight: headerHeight,
+            tickerHeight: tickerHeight,
+            archiveNoticeHeight: archiveNoticeHeight,
+            playerHeight: playerHeight,
+            iframeTop: iframeTop,
+            remainingHeight: remainingHeight,
+            iframeHeight: iframeHeight,
+            totalPageHeight: totalPageHeight
+          });
+        } else {
           // プレーヤー非表示時はデフォルト位置
           mobileIframe.style.top = '0px';
           mobileIframe.style.height = '100vh';
@@ -737,11 +727,40 @@
       });
     }
 
+    // CSSのsvh/lvh/dvh単位をピクセルに変換
+    function getVhUnitPx(kind /* 'svh' | 'lvh' | 'dvh' */ ) {
+      const el = document.createElement('div');
+      el.style.position = 'absolute';
+      el.style.height = `100${kind}`;
+      el.style.width = '0';
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      const h = Math.round(el.getBoundingClientRect().height);
+      document.body.removeChild(el);
+      return h;
+    }
+
+    // 一括取得＆表示
+    function logScreenAndVhSizes() {
+      const smallVh = getVhUnitPx('svh'); // URLバーあり基準
+      const largeVh = getVhUnitPx('lvh'); // URLバーなし基準
+      const dynVh = getVhUnitPx('dvh'); // 現在の実表示
+      const screenH = Math.round(window.screen.height); // デバイス全体の高さ
+      const screenW = Math.round(window.screen.width); // デバイス全体の高さ
+
+      console.log(
+        `@@@@@ screenHeight: ${screenW} smallVh: ${smallVh}, largeVh: ${largeVh}, dynVh: ${dynVh}`
+      );
+    }
+
     function adjustCoverImageHeight() {
       // ヘッダ・フッタの固定長と画面高さを取得
       headerContainerHeight = $('#header-container').outerHeight();
       tickerHeight = $('#ticker').outerHeight();
       windowWidth = $(window).width();
+
+      // windowHeight = $(window).outerHeight(true);
       windowHeight = $(window).outerHeight(true);
 
       contentHeight = windowHeight - (headerContainerHeight + tickerHeight);
@@ -749,6 +768,8 @@
       if (isMobileLandScape()) {
         contentHeight = windowHeight;
       }
+
+      //console.log("@@@@@ adjustCoverImageHeight ww="+windowWidth+" wh="+windowHeight+" ch="+contentHeight);
 
       if ($('#fvPlayer').is(':visible')) {
         // レスポンシブレイアウト対応：プレーヤーエリアの幅を基準にする
@@ -772,26 +793,30 @@
           var availableWidth = playerAreaWidth;
         }
 
+
         new_width = (contentHeight - 47) * 16 / 9;
-        //console.log("contentHeight:" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
 
         if (new_width < availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice()) {
-            new_width = windowHeight * 16 / 9;
-            $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
+            new_width = window.screen.width * 16 / 9 - 47;
+            // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
+            $('#fvPlayer').width(new_width + 'px');
+            console.log("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           } else {
             $('#fvPlayer').width(new_width + 'px');
+            //console.log("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           }
         } else {
           $('#fvPlayer').width(availableWidth + 'px');
+          //console.log("@@@@@ p3 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
         }
       }
 
       // main.jsの関数も呼び出してレイアウトを同期
-      if (typeof updatePlayerLayout === 'function') {
-        updatePlayerLayout();
-      }
+      //if (typeof updatePlayerLayout === 'function') {
+      // updatePlayerLayout();
+      //}
     }
 
     new FvPollingLib({
@@ -802,8 +827,7 @@
         }
       },
 
-      updateRaceInfo: function(race_idx) {
-      },
+      updateRaceInfo: function(race_idx) {},
       updateCover: function(flg) {
         if (flg == 0) {
           //console.log("cover hide");
@@ -864,7 +888,6 @@
         }, 100);
       });
     });
-
   </script>
 </body>
 
