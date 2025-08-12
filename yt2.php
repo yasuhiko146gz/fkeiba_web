@@ -125,7 +125,7 @@
       </div>
 
       <!-- モバイル縦向き用透明iframe -->
-      <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: red; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
+      <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: #f0f0f0; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
     </div>
   </div>
 
@@ -548,6 +548,119 @@
 
     /**
      * URLバーが表示されている場合に隠す処理
+
+     */
+    function disableScrollInLandscape() {
+      if (isMobileDevice() && getOrientation() === 'landscape') {
+        // iframeを非表示
+        const mobileIframe = document.getElementById('mobile-overlay-iframe');
+        mobileIframe.style.display = 'none';
+        
+        // bodyにheight: 100vh, overflow: hiddenを設定
+        document.body.style.height = '100vh';
+        document.body.style.overflow = 'hidden';
+        
+        // ページを一番上にスクロール
+        window.scrollTo(0, 0);
+        
+        console.log('横向きスクロール禁止を有効化しました');
+      }
+    }
+
+    /**
+     * 縦向き時のスクロール復元
+     */
+    function enableScrollInPortrait() {
+      if (isMobileDevice() && getOrientation() === 'portrait') {
+        // iframeを再表示
+        const mobileIframe = document.getElementById('mobile-overlay-iframe');
+        mobileIframe.style.display = 'block';
+        
+        // bodyのスタイルをリセット
+        document.body.style.height = 'auto';
+        document.body.style.overflow = 'auto';
+        
+        console.log('縦向きスクロールを復元しました');
+      }
+    }
+    
+    // 端末向き変更時の処理
+    var _lastOrientation = null;
+    var _landscapeScrollDisableTimer = null;
+
+    function handleOrientationChange() {
+      var newOrientation = getOrientation();
+      // 前回と向きが変わった時のみ実施
+      if (newOrientation !== _lastOrientation) {
+        _lastOrientation = newOrientation;
+        //console.log('orientation changed → ' + newOrientation);
+        if (isMobileDevice()) {
+          if (getOrientation() == "landscape") {
+            $('#header-container').hide();
+            $('#ticker').hide();
+            $('.archive-notice').hide();
+
+            // iPhone Safari URLバー自動非表示機能
+            handleUrlBarAutoHide();
+            
+            // 横向き時のスクロール禁止処理（100ms後）
+            if (_landscapeScrollDisableTimer) {
+              clearTimeout(_landscapeScrollDisableTimer);
+            }
+            _landscapeScrollDisableTimer = setTimeout(function() {
+              disableScrollInLandscape();
+            }, 100);
+          } else {
+            $('#header-container').show();
+            $('#ticker').show();
+            $('.archive-notice').show();
+
+            // 縦向き時はiOS用CSSクラスを削除
+            if (isIOSDevice()) {
+              document.body.classList.remove('ios-landscape');
+            }
+
+            // モバイル縦向き時の透明iframeサイズ調整
+            handleMobilePortraitIframe();
+            
+            // 縦向きに戻った時のスクロール復元
+            enableScrollInPortrait();
+            
+            // タイマーをクリア
+            if (_landscapeScrollDisableTimer) {
+              clearTimeout(_landscapeScrollDisableTimer);
+              _landscapeScrollDisableTimer = null;
+            }
+          }
+        }
+        adjustCoverImageHeight();
+      }
+    }
+    
+    /**
+     * iPhone Safari URLバー自動非表示処理
+     */
+    function handleUrlBarAutoHide() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        return;
+      }
+
+      // iOS用CSSクラスを追加
+      document.body.classList.add('ios-landscape');
+
+      // 少し遅延してからURLバー隠し処理を実行
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+      }, 150);
+
+      // 念のため追加で実行（端末によってタイミングが異なる場合がある）
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+      }, 400);
+    }
+
+    /**
+     * URLバーが表示されている場合に隠す処理
      */
     function hideUrlBarIfNeeded() {
       // URLバー表示状態をチェック
@@ -559,11 +672,7 @@
         console.log('URLバー非表示処理を実行しました');
       }
     }
-
-    /**
-     * URLバーが表示されているかを判定
-     * @return {boolean} true: 表示中, false: 非表示
-     */
+    
     function isUrlBarVisible() {
       if (!isIOSDevice() || !isMobileLandScape()) {
         return false;
@@ -607,7 +716,7 @@
     const remainingHeight = windowHeight - iframeTop;
     
     // 残りの高さ + 100pxでiframeの高さを設定
-    const iframeHeight = remainingHeight + 10;
+    const iframeHeight = remainingHeight + 100;
     
     mobileIframe.style.top = iframeTop + 'px';
     mobileIframe.style.height = iframeHeight + 'px';
