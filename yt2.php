@@ -489,63 +489,6 @@
       }
     }
 
-    // 端末向き変更時の処理
-    var _lastOrientation = null;
-
-    function handleOrientationChange() {
-      var newOrientation = getOrientation();
-      // 前回と向きが変わった時のみ実施
-      if (newOrientation !== _lastOrientation) {
-        _lastOrientation = newOrientation;
-        //console.log('orientation changed → ' + newOrientation);
-        if (isMobileDevice()) {
-          if (getOrientation() == "landscape") {
-            $('#header-container').hide();
-            $('#ticker').hide();
-            $('.archive-notice').hide();
-
-            // iPhone Safari URLバー自動非表示機能
-            handleUrlBarAutoHide();
-          } else {
-            $('#header-container').show();
-            $('#ticker').show();
-            $('.archive-notice').show();
-
-            // 縦向き時はiOS用CSSクラスを削除
-            if (isIOSDevice()) {
-              document.body.classList.remove('ios-landscape');
-            }
-
-            // モバイル縦向き時の透明iframe制御
-            handleMobilePortraitIframe();
-          }
-        }
-        adjustCoverImageHeight();
-      }
-    }
-
-    /**
-     * iPhone Safari URLバー自動非表示処理
-     */
-    function handleUrlBarAutoHide() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
-        return;
-      }
-
-      // iOS用CSSクラスを追加
-      document.body.classList.add('ios-landscape');
-
-      // 少し遅延してからURLバー隠し処理を実行
-      setTimeout(function() {
-        hideUrlBarIfNeeded();
-      }, 150);
-
-      // 念のため追加で実行（端末によってタイミングが異なる場合がある）
-      setTimeout(function() {
-        hideUrlBarIfNeeded();
-      }, 400);
-    }
-
     /**
      * URLバーが表示されている場合に隠す処理
 
@@ -559,9 +502,20 @@
         // bodyにheight: 100vh, overflow: hiddenを設定
         document.body.style.height = '100vh';
         document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        
+        // html要素にも同様のスタイルを適用
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100vh';
         
         // ページを一番上にスクロール
         window.scrollTo(0, 0);
+        
+        // スクロールイベントを阻止
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+        document.addEventListener('wheel', preventScroll, { passive: false });
+        document.addEventListener('scroll', preventScroll, { passive: false });
         
         console.log('横向きスクロール禁止を有効化しました');
       }
@@ -579,9 +533,29 @@
         // bodyのスタイルをリセット
         document.body.style.height = 'auto';
         document.body.style.overflow = 'auto';
+        document.body.style.position = 'static';
+        document.body.style.width = 'auto';
+        
+        // html要素のスタイルをリセット
+        document.documentElement.style.overflow = 'auto';
+        document.documentElement.style.height = 'auto';
+        
+        // スクロールイベント阻止を解除
+        document.removeEventListener('touchmove', preventScroll);
+        document.removeEventListener('wheel', preventScroll);
+        document.removeEventListener('scroll', preventScroll);
         
         console.log('縦向きスクロールを復元しました');
       }
+    }
+    
+    /**
+     * スクロールイベントを阻止する関数
+     */
+    function preventScroll(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
     }
     
     // 端末向き変更時の処理
@@ -603,13 +577,13 @@
             // iPhone Safari URLバー自動非表示機能
             handleUrlBarAutoHide();
             
-            // 横向き時のスクロール禁止処理（100ms後）
+            // 横向き時のスクロール禁止処理（URLバー非表示完了後 500ms後）
             if (_landscapeScrollDisableTimer) {
               clearTimeout(_landscapeScrollDisableTimer);
             }
             _landscapeScrollDisableTimer = setTimeout(function() {
               disableScrollInLandscape();
-            }, 100);
+            }, 500);
           } else {
             $('#header-container').show();
             $('#ticker').show();
