@@ -1,0 +1,268 @@
+
+/* Click Point > */
+
+div.fvVideoView>ul.fvClickPointWrapper>li {
+	position: absolute !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	display: block !important;
+	background-color: rgba(0,0,0,0.0) !important;
+	overflow: hidden !important;
+	/* z-index: 1200 !important; */
+	z-index: 1200 !important; /* 201202 work */
+	transition-property: background-color !important;
+	transition-duration: 0.3s !important;
+	transition-delay: 0s !important;
+	transition-timing-function: ease !important;
+}
+
+div.fvVideoView>ul.fvClickPointWrapper>li:hover {
+/*	background-color: rgba(0,0,0,0.5) !important;
+*/	background-color: rgba(255,255,255,0.3) !important;
+	cursor: pointer !important;
+}
+
+div.fvVideoView>ul.fvClickPointWrapper>li#clickpoint_main:hover {
+	background-color: rgba(255,255,255,0.0) !important;
+	cursor: auto !important;
+}
+
+div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaption {
+	color: #fff !important;
+	position: absolute !important;
+	top: 0 !important;
+	right: 0 !important;
+	background-color: rgba(0,0,0,.7) !important;
+	padding: 5px 10px !important;
+	line-height: 1em !important;
+	font-size: 0.7em !important;
+	border-bottom-left-radius: 4px !important;
+	font-weight: bold !important;
+}
+
+div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaptionMain {
+	color: #fff !important;
+	position: absolute !important;
+	top: 0 !important;
+	right: 0 !important;
+	background-color: rgba(0,0,0,.7) !important;
+	padding: 5px 10px !important;
+	line-height: 1em !important;
+	font-size: 0.7em !important;
+	border-bottom-left-radius: 4px !important;
+	font-weight: bold !important;
+	cursor: default !important;
+	display: none !important;
+}
+
+
+div.fvVideoView>ul.fvClickPointWrapper>li.fvSelected {
+	background-color: rgba(0,0,0,0.8) !important;
+	cursor: default !important;
+}
+
+div.fvVideoView>ul.fvClickPointWrapper>li.fvSelected:after {
+	background-color: rgba(255,255,255,0.7) !important;
+	content:'SELECTED' !important;
+	color: #333 !important;
+	padding: 0px !important;
+	line-height: 2em !important;
+	font-size: 0.6em !important;
+	font-weight: bold !important;
+	border-radius: 3px !important;
+	width: 8em;
+	height: 2em !important;
+	margin: -1em 0 0 -4em;
+	top: 50% !important;
+	left: 50% !important;
+	text-align: center !important;
+	display: block !important;
+	position: absolute !important;
+	overflow: hidden !important;
+	-webkit-animation-duration: 0.2s !important;
+	-webkit-animation-name: spreadSelected !important;
+	-webkit-animation-timing-function: ease-in !important;
+	-moz-animation-duration: 0.2s !important;
+	-moz-animation-name: spreadSelected !important;
+	-moz-animation-timing-function: ease-in !important;
+	animation-duration: 0.2s !important;
+	animation-name: spreadSelected !important;
+	animation-timing-function: ease-in !important;
+}
+
+@-webkit-keyframes spreadSelected {
+	from {
+		width: 0;
+		margin: -1em 0 0 0em;
+		opacity: 0.0;
+	}
+
+	to {
+		width: 8em;
+		margin: -1em 0 0 -4em;
+		opacity: 1.0;
+	}
+}
+
+@-moz-keyframes spreadSelected {
+	from {
+		width: 0;
+		margin: -1em 0 0 0em;
+		opacity: 0.0;
+	}
+
+	to {
+		width: 8em;
+		margin: -1em 0 0 -4em;
+		opacity: 1.0;
+	}
+}
+
+@keyframes spreadSelected {
+	from {
+		width: 0;
+		margin: -1em 0 0 0em;
+		opacity: 0.0;
+	}
+
+	to {
+		width: 8em;
+		margin: -1em 0 0 -4em;
+		opacity: 1.0;
+	}
+}
+
+/* < Click Point */
+
+
+/* SmartPhone Landscape */
+@media all and (max-width: 768px) {
+
+	/* Click Point > */
+
+	div.fvVideoView>ul.fvClickPointWrapper>li.fvSelected:after {
+		width: 6em;
+		margin: -1em 0 0 -3em;
+	}
+
+	div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaption {
+		padding: 3px 6px !important;
+		font-size: 0.6em !important;
+		font-weight: normal !important;
+	}
+
+	div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaptionMain {
+		padding: 3px 6px !important;
+		font-size: 0.6em !important;
+		font-weight: normal !important;
+	}
+
+	@-webkit-keyframes spreadSelected {
+		from {
+			width: 0;
+			margin: -1em 0 0 0em;
+			opacity: 0.0;
+		}
+		to {
+			width: 6em;
+			margin: -1em 0 0 -3em;
+			opacity: 1.0;
+		}
+	}
+
+	@-moz-keyframes spreadSelected {
+		from {
+			width: 0;
+			margin: -1em 0 0 0em;
+			opacity: 0.0;
+		}
+		to {
+			width: 6em;
+			margin: -1em 0 0 -3em;
+			opacity: 1.0;
+		}
+	}
+
+	@keyframes spreadSelected {
+		from {
+			width: 0;
+			margin: -1em 0 0 0em;
+			opacity: 0.0;
+		}
+		to {
+			width: 6em;
+			margin: -1em 0 0 -3em;
+			opacity: 1.0;
+		}
+	}
+
+	/* < Click Point */
+
+}
+
+/* SmartPhone Portlate */
+@media all and (max-width: 430px) {
+
+	/* Click Point > */
+
+	div.fvVideoView>ul.fvClickPointWrapper>li.fvSelected:after {
+		line-height: 1.6em !important;
+		font-size: 0.6em !important;
+		height: 1.6em !important;
+		top: 60% !important;
+	}
+
+	div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaption {
+		padding: 3px 6px !important;
+		font-size: 0.5em !important;
+		font-weight: normal !important;
+	}
+
+	div.fvVideoView>ul.fvClickPointWrapper>li>span.fvCaptionMain {
+		padding: 3px 6px !important;
+		font-size: 0.5em !important;
+		font-weight: normal !important;
+	}
+
+	@-webkit-keyframes spreadSelected {
+		from {
+			width: 0 !important;
+			margin: -0.8em 0 0 0em !important;
+			opacity: 0.0 !important;
+		}
+		to {
+			width: 5em !important;
+			margin: -0.8em 0 0 -2.5em !important;
+			opacity: 1.0 !important;
+		}
+	}
+
+	@-moz-keyframes spreadSelected {
+		from {
+			width: 0 !important;
+			margin: -0.8em 0 0 0em !important;
+			opacity: 0.0 !important;
+		}
+		to {
+			width: 5em !important;
+			margin: -0.8em 0 0 -2.5em !important;
+			opacity: 1.0 !important;
+		}
+	}
+
+	@keyframes spreadSelected {
+		from {
+			width: 0 !important;
+			margin: -0.8em 0 0 0em !important;
+			opacity: 0.0 !important;
+		}
+		to {
+			width: 5em !important;
+			margin: -0.8em 0 0 -2.5em !important;
+			opacity: 1.0 !important;
+		}
+	}
+
+	/* < Click Point */
+
+}

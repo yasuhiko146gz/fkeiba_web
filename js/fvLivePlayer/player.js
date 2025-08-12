@@ -1,0 +1,1829 @@
+// 読み込み対象のモジュール
+var FV_MODULES = [
+  "//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js",
+  "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js",
+  "lib/jquery.ui.touch-punch.min.js",
+
+  "lib/hls.min.js",
+  "lib/moment.min.js",
+  "lib/platform.js",
+  "lib/singularoverlay.js",
+  "common.min.js",
+  "control.min.js",
+  "video_fv.min.js",
+
+  "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css",
+  "common.min.css",
+  "control.min.css",
+  "video_fv.min.css",
+  "player.min.css",
+  "themes.min.css",
+];
+
+var ua0 = window.navigator.userAgent.toLowerCase();
+if (ua0.indexOf("msie") > 0 || !!navigator.userAgent.match(/Trident\/7\./)) {
+  FV_MODULES.splice(6, 1);
+}
+
+// 必要なモジュールを読み込む
+loadGnzoFvModules(FV_MODULES);
+
+/**************************************************************************
+ *
+ * fvLivePlayer クラス
+ *
+ **************************************************************************/
+var FvLivePlayer = function (targetWrapperId, opt) {
+  $(function ($) {
+    // 共通クラス
+    var common = new FvCommon(opt);
+
+    // プレーヤー参照
+    var player_ref = null;
+
+    // 統計情報で使用するセッションID
+    var sessionID = null;
+    sessionID = common.getCookie("sessionID");
+
+    if (sessionID == null) {
+      sessionID = common.generateUuid();
+      common.setCookieSession(sessionID);
+    }
+    common.setSessionID(sessionID);
+
+    var contentID = "fvLIVE_Standard";
+    if (opt.contentID != null) {
+      contentID = opt.contentID;
+    }
+    common.setContentID(contentID);
+    common.setCookieContent(contentID);
+
+    var isBufferingForStat = false;
+    var isSeekingByUser = false;
+    var intervalID = null;
+    var skipEndNotice = false;
+
+    // バックアップメディア使用フラグ
+    var enableBackup = false;
+    var isReady = false;
+    var selectedCamIdx = 0;
+
+    // 1画面モードON/OFF
+    var isSingleMain = false;
+
+    // プレーヤー初回起動時のバックアップメディア使用可否
+    var startWithBackup = false;
+
+    if (opt["isBackup"] && opt["isBackup"] == true) {
+      startWithBackup = true;
+      enableBackup = true;
+    }
+
+    var interval = null;
+
+    // Target Full Screen ID
+    var targetFullScreenId = "";
+
+    // アナリティクス仕様フラグ
+    var isEnableAnalytict = false;
+    if (opt["gaTrackingId"]) isEnableAnalytict = true;
+
+    var isDebug = false;
+    if (opt.isDebug != undefined && opt.isDebug === true) {
+      isDebug = true;
+    }
+
+    var isDVR = false;
+    if (opt["isDVR"]) isDVR = opt["isDVR"];
+    var dvrInitSeek = false;
+    var dvrBufferOffset = common.getDvrBufferOffset();
+
+    var polling_active = false;
+    var polling_subdata = false;
+
+    if (opt["polling_subdata"] && opt["polling_subdata"] > 0) {
+      polling_subdata = true;
+    }
+
+    var isTheaterModeEnable = false;
+    if (opt['isTheaterModeEnable'] != null) {
+      isTheaterModeEnable = opt['isTheaterModeEnable'];
+    }
+
+    // singular.live のオーバレイを利用するか否か
+    var useSGL = false;
+    if (opt["useSGL"]) useSGL = opt["useSGL"];
+    if (common.isMsie() == true) {
+      useSGL = false;
+    }
+
+    var direction, position, tm_start;
+
+    // 統計情報を使用するか
+    if (opt["statsInterval"] > 0) {
+      polling_active = true;
+    }
+
+    var liveStartTime = "0:00:00";
+    if (opt["liveStartTime"]) {
+      liveStartTime = opt["liveStartTime"];
+      console.log("player init config liveStartTime: " + liveStartTime);
+    }
+
+    // ラッパービュー
+    var $wrapper = $("#" + targetWrapperId);
+
+    // プレーヤービュー
+    var fvVideoView = new FvVideoView(
+      opt,
+      opt.originWidth,
+      opt.originHeight,
+      opt.autoplay,
+      opt["key"],
+      opt.isLive,
+      opt.enableLoop,
+      opt["tracking"],
+      isDVR,
+      opt.isDebug,
+      opt.useSGL
+    );
+
+    // コントロールビュー
+    var isStandard = true;
+    var fvControlView = new FvControlView(
+      opt.isLive,
+      opt.enableShare,
+      opt.disableSeek,
+      opt.showLicensee,
+      isDVR,
+      false,
+      isTheaterModeEnable,
+      isStandard
+    );
+    var $w = $(window);
+
+    // set callback for fvVideoView
+    fvVideoView.setCallbacks({
+      onCameraSwitching: function () {
+        common.sendStatEvent("camera_switching");
+      },
+      onCameraSwitched: function () {
+        common.sendStatEvent("camera_switched");
+      },
+      onQualityLevelChanged: function (msg) {
+        common.sendStatEvent("level_switched", msg);
+        opt.onQualityLevelChanged();
+      },
+      //onError: opt.onError,
+      onErrorStat: function (error_description) {
+        common.sendStatEvent("error", error_description);
+        if (opt["onError"]) {
+          var msg = {
+            code: 400,
+            msg: "Stream access error",
+          };
+          opt["onError"](msg);
+        }
+      },
+      onDisableControl: function () {
+        if (customControlMode == false) {
+          fvControlView.controlView.hide();
+        }
+      },
+    });
+
+    $wrapper.append(fvVideoView.videoView);
+    $wrapper.append(fvControlView.controlView);
+
+    // チュートリアルスクリーン
+    var $tutorialScreenView = common.getTutorialScreen(function (e) {
+      //if (common.isMobile() && fvVideoView.originVideo_front.readyState <= 2) {
+      //console.log("Mobile tutorial tapped but ignored readyState="+fvVideoView.originVideo_front.readyState);
+      //return;
+      //}
+      fvVideoView.getOriginVideoFront().play();
+      fvVideoView.hidePlayScreen(); //170524
+      $(this).fadeOut(0);
+    });
+
+    $wrapper.append($tutorialScreenView);
+
+    /* 国によってチュートリアル表示を変更 */
+    fetch("https://api.ipify.org?format=json")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        var ipAddress = data.ip;
+        // ipapiを使用してIPアドレスから国を判別
+        return fetch("https://ipapi.co/" + ipAddress + "/json/");
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        var country = data.country_name;
+
+        node = findScriptNode("player.min.js");
+        fv_js_src = node.src;
+        fv_script_base = fv_js_src.substr(0, fv_js_src.lastIndexOf("/")) + "/";
+        fv_script_base =
+          fv_script_base.substr(0, fv_js_src.lastIndexOf("/")) + "/";
+
+        console.log("country=" + country);
+
+        // 日本国内か海外かを判別
+        if (country !== "Japan") {
+          var imageUrl = fv_script_base + "img/tt_black_en.svg";
+          $(".fvTutorialScreenView").css(
+            "background-image",
+            "url(" + imageUrl + ")"
+          );
+        }
+        common.setCookieCountry(country);
+      })
+      .catch(function (error) {
+        console.error("Error:", error);
+      });
+
+    // 内部関数
+    $func = {
+      /**************************************************************************
+       * リサイズ処理
+       **************************************************************************/
+      resize: function () {
+        // コントロールの高さ取得
+        var controlHeight = fvControlView.height();
+
+        if ($func.isFullScreen()) {
+          var orgAspect = opt.originWidth / opt.originHeight;
+          var zoomRatio = $(window).width() / opt.originWidth;
+
+          var wh = $(window).height();
+
+          if (wh < controlHeight + opt.originHeight * zoomRatio) {
+            // 元動画をコントロール含めて拡大した場合、はみ出すケース
+            var vwh = wh - controlHeight;
+            var vww = vwh * orgAspect;
+            fvVideoView.videoView.width(vww);
+          } else {
+            // 元動画をコントロール含めて拡大した場合、はみ出さないケース
+            fvVideoView.videoView.width("100vw");
+          }
+        } else {
+          // フルスクリーンでない場合は、ビデオビューを親要素と同じ横幅に戻す
+          fvVideoView.videoView.width("inherit");
+        }
+
+        // ビデオリサイズ
+        fvVideoView.resize();
+        // コントロールリサイズ
+        fvControlView.resize();
+
+        if ($func.isFullScreen()) {
+          if (targetFullScreenId === targetWrapperId) resize();
+        } else {
+          resize();
+        }
+
+        // リサイズイベント
+        if (opt["onResize"]) {
+          // コールバックでサイズを返却
+          opt.onResize(
+            fvVideoView.videoView.width(),
+            fvVideoView.videoView.height() + controlHeight
+          );
+        }
+      },
+
+      /**************************************************************************
+       * 時間差シークの必要性チェック
+       **************************************************************************/
+      isNeedDelaySeek: function () {
+        // 実際は
+        return (
+          (!common.isMobile() &&
+            (common.isSafari() || common.isFirefox() || common.isMsie())) || // PC ... only Safari,Firefox,IE
+          //( common.isMobile() && !( common.isFirefox() || common.isChrome() ) ) // Mobile ... except Firefox,Chrome(HLS.js applied)
+          (common.isMobile() && !common.isFirefox()) // Mobile ... except Firefox,Chrome(HLS.js applied)
+        );
+      },
+
+      /**************************************************************************
+       * 再生/停止状態監視
+       **************************************************************************/
+      playPauseMonitoring: function () {
+        fvControlView.justifyPlayPauseDisplay(); // ControlのPlay/Pauseをvideoタグの実際の状態に合わせる
+        fvControlView.justifyMuteDisplay(); // Mute表示をvideoタグの実際の状態に合わせる
+        if ($func.isFullScreen()) {
+          fvControlView.fullscreenButtonOn();
+        } else {
+          fvControlView.fullscreenButtonOff();
+        }
+        // モバイルでは pause中で切り替え中以外は、PlayScreenを表示する
+        var paused = fvVideoView.getOriginVideoFront().paused;
+        if (
+          paused &&
+          (common.isIos() || common.isAndroid()) &&
+          !fvVideoView.isErrorViewVisible()
+        ) {
+          if (fvVideoView.isSwitching() === false) {
+            fvVideoView.showPlayScreen();
+          }
+        }
+        requestAnimationFrame($func.playPauseMonitoring);
+      },
+
+      /**************************************************************************
+       * フルスクリーン状態判定
+       **************************************************************************/
+      isFullScreen: function () {
+        var w = $("#" + targetWrapperId, window.parent.document);
+        var e = $("iframe", w).get(0);
+
+        var doc;
+        if (e.ownerDocument) {
+          doc = e.ownerDocument;
+        } else {
+          doc = e;
+          e = doc.documentElement;
+        }
+
+        // When fullscreen mode is not supported then return null
+        if (
+          !(
+            /** @type {?Function} */ doc["exitFullscreen"] ||
+            /** @type {?Function} */ doc["webkitExitFullscreen"] ||
+            /** @type {?Function} */ doc["webkitCancelFullScreen"] ||
+            /** @type {?Function} */ doc["msExitFullscreen"] ||
+            /** @type {?Function} */ doc["mozCancelFullScreen"]
+          )
+        ) {
+          return null;
+        }
+
+        // Check fullscreen state
+        state =
+          !!doc["fullscreenElement"] ||
+          !!doc["msFullscreenElement"] ||
+          !!doc["webkitIsFullScreen"] ||
+          !!doc["mozFullScreen"];
+
+        if (!state) targetFullScreenId = "";
+
+        return state;
+      },
+
+			/**************************************************************************
+			* Theater mode
+			**************************************************************************/
+			changeTheaterMode: function() {
+				isSingleMain = !isSingleMain;
+				fvControlView.setTheaterModeButton(isSingleMain);
+				fvVideoView.changeTheaterMode(isSingleMain);
+				if (isSingleMain == true) {
+					common.sendStatEvent("theatermode");
+				} else {
+					common.sendStatEvent("exit_theatermode");
+				}
+				$func.resize();
+			},
+
+      /**************************************************************************
+       * フルスクリーン化
+       **************************************************************************/
+      changeFullscreen: function () {
+        if ($func.isFullScreen()) {
+          fvControlView.fullscreenButtonOff();
+
+          if (window.parent.document.webkitCancelFullScreen) {
+            window.parent.document.webkitCancelFullScreen(); //Chrome15+, Safari5.1+, Opera15+
+          } else if (window.parent.document.mozCancelFullScreen) {
+            window.parent.document.mozCancelFullScreen(); //FF10+
+          } else if (window.parent.document.msExitFullscreen) {
+            window.parent.document.msExitFullscreen(); //IE11+
+          } else if (window.parent.document.cancelFullScreen) {
+            window.parent.document.cancelFullScreen(); //Gecko:FullScreenAPI仕様
+          } else if (window.parent.document.exitFullscreen) {
+            window.parent.document.exitFullscreen(); // HTML5 Fullscreen API仕様
+          }
+          targetFullScreenId = "";
+        } else {
+          fvControlView.fullscreenButtonOn();
+
+          var w = $("#" + targetWrapperId, window.parent.document);
+          var elm = $("iframe", w).get(0);
+
+          if (elm.requestFullscreen) {
+            elm.requestFullscreen();
+          } else if (elm.mozRequestFullScreen) {
+            elm.mozRequestFullScreen();
+          } else if (elm.webkitRequestFullscreen) {
+            elm.webkitRequestFullscreen();
+          } else if (elm.msRequestFullscreen) {
+            elm.msRequestFullscreen();
+          } else if (elm.webkitEnterFullscreen) {
+            elm.webkitEnterFullscreen();
+          } else {
+            $wrapper.css("width", "100%");
+            if (common.isIpadOS()) {
+              alert(
+                "ご利用のブラウザは全画面表示に対応していません。\nSafariブラウザでお試しください。"
+              );
+            } else {
+              alert("ご利用の端末はフルスクリーンに対応していません。");
+            }
+            return;
+          }
+          targetFullScreenId = targetWrapperId;
+          common.sendStatEvent("fullscreen");
+        }
+      },
+
+      /**************************************************************************
+       * メディア切り替え
+       **************************************************************************/
+      changeMedia: function (src) {
+        // 現在時刻取得
+        currentTime = fvVideoView.getOriginVideoFront().currentTime;
+
+        dvrInitSeek = false;
+        if (intervalID != null) {
+          clearInterval(intervalID);
+        }
+
+        // モバイル用にURLを変換する
+        //var targetSrc = common.replaceMobileUrl(src,opt.isLive);
+
+        //isDVR = (targetSrc.indexOf('?DVR') != -1) ? true : false;
+
+        if (opt["key"] != null) {
+          src = common.replaceUrlForSampleAES(src);
+        }
+
+        // メディアをセット
+        if (opt.isLive == false && isDVR == false) {
+          initPos = currentTime; // VODの場合、再生開始位置を指定
+        } else {
+          initPos = -1; // Live/DVRの場合、再生開始位置指定なし
+        }
+
+        // コンテンツ切替え
+        if (common.isSafari()) {
+          // サファリの場合は最終フレーム転写完了より先にVideoが黒くなるので
+          // 時間差でソースを読み込む
+          setTimeout(function () {
+            common.log("Safari changeMedia src:" + src + " initPos:" + initPos);
+            fvVideoView.src(src, true, initPos);
+          }, 0);
+        } else {
+          common.log(
+            "Not-Safari changeMedia src:" + src + " initPos:" + initPos
+          );
+          fvVideoView.src(src, true, initPos);
+        }
+
+        // VODの場合は切替後の位置を同期させる
+        if (!opt.isLive && !isDVR) {
+          // hls.jsを利用する場合は、マニフェストロード位置を指定し、シーク操作は行わない
+          if (common.isVideoTagBase() === true) {
+            if (!$func.isNeedDelaySeek()) {
+              isNeedDelaySeek = false;
+            } else {
+              // iOS, PC Safari が対象
+              isEnableDelaySeek = true;
+            }
+          }
+        }
+      }, // changeMedia
+    }; // $func
+
+    $wrapper.addClass("fvPlayerWrapper");
+
+    // スマホの場合は特定のクラス名を付与
+    if (common.isMobile()) {
+      $wrapper.addClass("fvMobileScreen");
+    }
+
+    // プレーヤーテーマの設定（デフォルトはblack）
+    if (opt["theme"] != undefined && opt["theme"] != "black") {
+      $wrapper.addClass("fvTheme_" + opt["theme"]);
+    }
+
+    var camW = 100 / opt.col; // 横分割率
+    var camH = 100 / opt.row; // 縦分割率
+
+    var currentTime = 0; // カレントタイム
+    var isEnableDelaySeek = false; // 遅延シークフラグ
+
+    for (var i = 0; i < opt.cameras.length; i++) {
+      // カメラ情報
+      var cam = opt.cameras[i];
+      var isMain = false;
+
+      // メインビューでない場合
+      if (cam["isMain"] == undefined || cam["isMain"] == false) {
+        var left = camW * cam.x + "%";
+        var top = Math.round(camH * cam.y) + "%";
+        var width = camW * cam.level + "%";
+        var height = camH * cam.level + "%";
+
+        // クリックポイント作成
+        var $clickPoint = fvVideoView.appendClickPoint(
+          top,
+          left,
+          width,
+          height,
+          cam.tag,
+          cam.caption,
+          isMain,
+          cam.sglID
+        );
+
+        // エレメントにソースを保存する
+        $clickPoint.element.attr("data-src", opt.cameras[i].src);
+        $clickPoint.element.attr("data-backupSrc", opt.cameras[i].backupSrc);
+
+        // デフォルトのリソースをセットする
+        if (cam["defaultView"] != undefined && cam["defaultView"] == true) {
+          // メディアをセット
+          var startUrl = startWithBackup
+            ? opt.cameras[i].backupSrc
+            : opt.cameras[i].src;
+
+          // 初回ロード
+          if (opt["key"] != null) {
+            startUrl = common.replaceUrlForSampleAES(startUrl);
+          }
+          initPos = -1;
+
+          if (opt.tracking != undefined && common.isVideoTagBase() === true) {
+            // 初回Token取得のコールバックでsrc設定する
+            $.ajax({
+              type: "GET",
+              url: opt.tracking,
+              crossDomain: true,
+              dataType: "text",
+            })
+              .done(function (data) {
+                common.log("1st getToken OK : " + data);
+                fvVideoView.setToken(data);
+                fvVideoView.startIntervalGetToken();
+                fvVideoView.src(startUrl, false, initPos);
+              })
+              .fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                common.log(
+                  "1st getToken NG : " + errorThrown + " : " + textStatus
+                );
+                fvVideoView.src(startUrl, false, initPos);
+              });
+          } else {
+            fvVideoView.src(startUrl, false, initPos);
+          }
+
+          // クリックポイントの状態を選択済みにする
+          fvVideoView.changeClickPoint(opt.cameras[i].tag, true);
+          selectedCamIdx = i;
+        }
+
+        // クリックポイントのクリックイベントを実装
+        $clickPoint.element.click("click", function (e) {
+          if ($(this).hasClass("fvSelected")) return;
+
+          var src;
+          // バックアップメディア使用フラグがオンの場合はバックアップソースを利用
+
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip tap during switching");
+            return;
+          }
+
+          if (enableBackup) {
+            src = $(this).attr("data-backupSrc");
+          } else {
+            src = $(this).attr("data-src");
+          }
+          var tag = $(this).attr("data-tag");
+          var caption = $(".fvSelectedCaption", $(this)).text();
+
+          // 現在の映像をキャプチャーして表示する
+          // fvVideoView.drawVideoCaptur(); //210303_w-videotag
+
+          for (var i = 0; i < fvVideoView.getClickPointList().length; i++) {
+            // 全てのクリックポイントの状態を非選択状態にする
+            fvVideoView.changeClickPoint(
+              fvVideoView.getClickPointList()[i].tag,
+              false
+            );
+
+            // 選択されたViewのidxを取得
+            if (fvVideoView.getClickPointList()[i].tag == tag) {
+              selectedCamIdx = i;
+            }
+          }
+
+          // クリックポイントの状態を選択済みにする
+          fvVideoView.changeClickPoint(tag, true);
+
+          // singularViewの切替
+          if (useSGL) {
+            fvVideoView.changeSingularView(tag);
+          }
+
+          $func.changeMedia(src);
+
+          // カメラセレクトイベント
+          if (opt["onCameraSelect"]) {
+            opt.onCameraSelect(tag, caption);
+          }
+
+          if (isEnableAnalytict) {
+            // Analyticsが有効な場合はカメラクリックイベント発行
+            // ga('send', 'event', 'video', 'play', caption); // GA→GA4に伴い停止 要修正
+          }
+        });
+      } else {
+        // isMain == true
+        isMain = true;
+
+        var left = camW * cam.x + "%";
+        var top = Math.round(camH * cam.y) + "%";
+        var width = camW * cam.level + "%";
+        var height = camH * cam.level + "%";
+
+        // クリックポイント作成のみ （タップ不能）
+        var $clickPoint = fvVideoView.appendClickPoint(
+          top,
+          left,
+          width,
+          height,
+          cam.tag,
+          cam.caption,
+          isMain,
+          cam.sglID
+        );
+      }
+    }
+
+    if (useSGL) {
+      fvVideoView.applySGLToClickPoint(opt.cameras);
+    }
+
+    // Videoタグイベント設定
+    fvVideoView.video_front
+      .bind("loadedmetadata", function (e) {
+        common.log("loadedmetadata player front");
+        // PC(Safari以外)はloadedmetadataイベントで遅延シークを実施
+        if (
+          $func.isNeedDelaySeek() &&
+          !opt.isLive &&
+          !opt.isDVR &&
+          !common.isSafari() &&
+          !common.isMobile()
+        ) {
+          if (common.isVideoTagBase() == true) {
+            fvVideoView.originVideo_front.currentTime = currentTime;
+            common.log(
+              "@@@ loadedmetadata fvVideoView.getOriginVideoFront.currentTime:" +
+                fvVideoView.getOriginVideoFront().currentTime
+            );
+          }
+          isEnableDelaySeek = false;
+        }
+      })
+      .bind("loadeddata", function (e) {
+        common.log("loadeddata player front");
+
+        // モバイル端末とPC Safariはloadeddataイベントで遅延シークを実施
+        if (
+          $func.isNeedDelaySeek() &&
+          !opt.isLive &&
+          !opt.isDVR &&
+          (common.isMobile() ||
+            (common.isSafari() == true && !common.isMobile() == true))
+        ) {
+          if (common.isVideoTagBase() == true) {
+            fvVideoView.originVideo_front.currentTime = currentTime;
+            common(
+              "@@@ loadeddata_f(a) front:" +
+                fvVideoView.getOriginVideoFront().currentTime +
+                " back:" +
+                fvVideoView.getOriginVideoBack().currentTime +
+                " cur:" +
+                currentTime
+            );
+          }
+          isEnableDelaySeek = false;
+        } else {
+          common.log(
+            "@@@ loadeddata_f(b) fvVideoView.getOriginVideoFront().currentTime:" +
+              fvVideoView.getOriginVideoFront().currentTime
+          );
+        }
+        //if (common.isIos() && opt.isLive) {
+        //	fvVideoView.originVideo_front.currentTime = fvVideoView.originVideo_front.currentTime + 0.1;
+        //}
+      })
+      .bind("durationchange", function (e) {
+        // DVRは一旦後回し 基本playingの後を想定だが・・場合分けが大変
+        originVideo = fvVideoView.getOriginVideoFront();
+        if (
+          originVideo.seekable.end.length != 0 &&
+          originVideo.seekable.start.length != 0
+        ) {
+          var duration =
+            originVideo.seekable.end(0) - originVideo.seekable.start(0);
+          if (isDVR) {
+            duration -= dvrBufferOffset;
+          }
+          if (duration > 0) {
+            fvControlView.updateDuration(duration);
+          }
+        }
+      })
+      .bind("timeupdate", function (e) {
+        var originVideo = fvVideoView.getOriginVideoFront();
+        if (isDVR) {
+          if (!isNaN(originVideo.duration)) {
+            var duration =
+              originVideo.seekable.end(0) - originVideo.seekable.start(0);
+            duration -= dvrBufferOffset;
+            if (duration > 0.1) fvControlView.updateDuration(duration);
+          }
+        }
+
+        fvControlView.updateSeek(originVideo.currentTime);
+      })
+      .bind("play", function (e) {
+        // 再生イベント
+        if (opt["onPlay"]) {
+          opt.onPlay();
+        }
+        common.sendStatEvent("play");
+      })
+      .bind("pause", function (e) {
+        // 停止イベント
+        if (opt["onPause"]) {
+          opt.onPause();
+        }
+        common.sendStatEvent("paused");
+      })
+      .bind("ended", function (e) {
+        common.log("front ended enableLoop:" + opt.enableLoop);
+        common.sendStatEvent("ended", "ended");
+        if (opt.enableLoop == true) {
+          fvVideoView.getOriginVideoFront().play();
+        }
+      })
+      .bind("seeking", function (e) {
+        if (isSeekingByUser) {
+          common.sendStatEvent("seeking");
+          if (useSGL == true && isDVR) {
+            fvVideoView.hideSingularView();
+          }
+        }
+      })
+      .bind("seeked", function (e) {
+        if (isSeekingByUser) {
+          isSeekingByUser = false;
+          common.sendStatEvent("seeked");
+          if (useSGL == true && isDVR) {
+            fvVideoView.showSingularView(selectedCamIdx);
+          }
+        }
+      })
+      .bind("waiting", function (e) {
+        common.sendStatEvent("waiting");
+        isBufferingForStat = true;
+      })
+      .bind("playing", function (e) {
+        common.sendStatEvent("playing");
+      })
+      .bind("error", function (e) {
+        fvVideoView.getOriginVideoFront().pause();
+
+        // エラー画面表示
+        fvVideoView.showError("VIDEO-TAG: ERROR");
+        if (opt["onError"]) {
+          var msg = {
+            code: 400,
+            msg: "Network error",
+          };
+          opt["onError"](msg);
+        }
+
+        // エラー
+        if (common.isVideoTagBase() == true) {
+          var errorStr = "";
+          if (fvVideoView.getOriginVideoFront().error != null) {
+            console.log(
+              "video tag error:" +
+                JSON.stringify(fvVideoView.getOriginVideoFront().error)
+            );
+            switch (fvVideoView.getOriginVideoFront().error.code) {
+              case 0:
+                errorStr = "abort";
+                break;
+              case 1:
+                errorStr = "network error";
+                break;
+              case 2:
+                errorStr = "decode error";
+                break;
+              case 3:
+                errorStr = "unsupported";
+                break;
+              default:
+                errorStr = "unknown";
+                break;
+            }
+          }
+          common.sendStatEvent("error", errorStr);
+        }
+      });
+
+    // Videoタグイベント設定
+    fvVideoView.video_back
+      .bind("loadedmetadata", function (e) {
+        common.log("loadedmetadata player back");
+
+        // PC(Safari以外)はloadedmetadataイベントで遅延シークを実施
+        //		if ( $func.isNeedDelaySeek() && !opt.isLive && !opt.isDVR && !common.isSafari() && !common.isMobile() ) {
+        if (
+          $func.isNeedDelaySeek() &&
+          !opt.isLive &&
+          !opt.isDVR &&
+          !common.isMobile()
+        ) {
+          if (common.isVideoTagBase() == true) {
+            fvVideoView.originVideo_back.currentTime = currentTime;
+            common.log(
+              "@@@ loadedmetadata fvVideoView.originVideo_back.currentTime:" +
+                fvVideoView.originVideo_back.currentTime
+            );
+          }
+          isEnableDelaySeek = false;
+        }
+      })
+      .bind("loadeddata", function (e) {
+        common.log("loadeddata player back");
+
+        // モバイル端末とPC Safariはloadeddataイベントで遅延シークを実施
+        if (
+          $func.isNeedDelaySeek() &&
+          !opt.isLive &&
+          !opt.isDVR &&
+          (common.isMobile() ||
+            (common.isSafari() == true && !common.isMobile() == true))
+        ) {
+          if (common.isVideoTagBase() == true) {
+            fvVideoView.originVideo_back.currentTime = currentTime;
+            common.log(
+              "@@@ loadeddata_b(a) front:" +
+                fvVideoView.originVideo_front.currentTime +
+                " back:" +
+                fvVideoView.originVideo_back.currentTime +
+                " cur:" +
+                currentTime
+            );
+          }
+          isEnableDelaySeek = false;
+        } else {
+          common.log(
+            "@@@ loadeddata_b(b) fvVideoView.originVideo_back.currentTime:" +
+              fvVideoView.originVideo_back.currentTime
+          );
+        }
+        //if (common.isIos() && opt.isLive) {
+        //	fvVideoView.originVideo_front.currentTime = fvVideoView.originVideo_front.currentTime + 0.1;
+        //}
+      })
+      .bind("durationchange", function (e) {
+        // DVRは一旦後回し 基本playingの後を想定だが・・場合分けが大変
+        originVideo = fvVideoView.getOriginVideoFront();
+        if (
+          originVideo.seekable.end.length != 0 &&
+          originVideo.seekable.start.length != 0
+        ) {
+          var duration =
+            originVideo.seekable.end(0) - originVideo.seekable.start(0);
+          if (isDVR) {
+            duration -= dvrBufferOffset;
+          }
+          if (duration > 0) {
+            fvControlView.updateDuration(duration);
+          }
+        }
+      })
+      .bind("timeupdate", function (e) {
+        originVideo = fvVideoView.getOriginVideoFront();
+
+        if (isDVR) {
+          if (!isNaN(originVideo.duration)) {
+            var duration =
+              originVideo.seekable.end(0) - originVideo.seekable.start(0);
+            duration -= dvrBufferOffset;
+            if (duration > 0.1) fvControlView.updateDuration(duration);
+          }
+        }
+        fvControlView.updateSeek(originVideo.currentTime);
+      })
+      .bind("play", function (e) {
+        // 再生イベント
+        if (opt["onPlay"]) {
+          opt.onPlay();
+        }
+        common.sendStatEvent("play");
+      })
+      .bind("pause", function (e) {
+        // 停止イベント
+        if (opt["onPause"]) {
+          opt.onPause();
+        }
+        common.sendStatEvent("paused");
+      })
+      .bind("ended", function (e) {
+        console.log("front ended enableLoop:" + opt.enableLoop);
+        common.sendStatEvent("ended", "ended");
+        if (opt.enableLoop == true) {
+          fvVideoView.getOriginVideoFront().play();
+        }
+      })
+      .bind("seeking", function (e) {
+        if (isSeekingByUser) {
+          common.sendStatEvent("seeking");
+          if (useSGL == true && isDVR) {
+            fvVideoView.hideSingularView();
+          }
+        }
+      })
+      .bind("seeked", function (e) {
+        if (isSeekingByUser) {
+          isSeekingByUser = false;
+          common.sendStatEvent("seeked");
+          if (useSGL == true && isDVR) {
+            fvVideoView.showSingularView(selectedCamIdx);
+          }
+        }
+      })
+      .bind("waiting", function (e) {
+        common.sendStatEvent("waiting");
+        isBufferingForStat = true;
+      })
+      .bind("playing", function (e) {
+        common.sendStatEvent("playing");
+        isBufferingForStat = true;
+      })
+      .bind("error", function (e) {
+        fvVideoView.getOriginVideoFront().pause();
+        fvVideoView.getOriginVideoBack().pause();
+
+        // エラー画面表示
+        fvVideoView.showError("VIDEO-TAG: ERROR");
+        if (opt["onError"]) {
+          var msg = {
+            code: 400,
+            msg: "Network error",
+          };
+          opt["onError"](msg);
+        }
+
+        // エラー
+        if (common.isVideoTagBase() == true) {
+          var errorStr = "";
+          if (fvVideoView.getOriginVideoBack().error != null) {
+            console.log(
+              "video tag error:" +
+                JSON.stringify(fvVideoView.getOriginVideoBack().error)
+            );
+            switch (fvVideoView.getOriginVideoBack().error.code) {
+              case 0:
+                errorStr = "abort";
+                break;
+              case 1:
+                errorStr = "network error";
+                break;
+              case 2:
+                errorStr = "decode error";
+                break;
+              case 3:
+                errorStr = "unsupported";
+                break;
+              default:
+                errorStr = "unknown";
+                break;
+            }
+          }
+          common.sendStatEvent("error", errorStr);
+        }
+      });
+
+    // サファリの場合は200ms遅延してリサイズを行う
+    if (common.isSafari()) {
+      setTimeout($func.resize, 200);
+    } else {
+      $func.resize();
+    }
+
+    // コントロール関連イベントのセットアップ
+
+    // シークバー操作コールバック
+    fvControlView.callbackSeekSlide(function (t) {
+      isSeekingByUser = true;
+      fvVideoView.getOriginVideoFront().currentTime = t;
+    });
+
+    // ボリュームバー操作コールバック
+    fvControlView.callbackVolumeSlide(function (v) {
+      fvVideoView.getOriginVideoFront().volume = v;
+      fvVideoView.getOriginVideoBack().volume = v;
+    });
+
+    // ボリュームの初期値セット
+    fvControlView.updateVolume(fvVideoView.getOriginVideoFront().volume);
+
+    // ポーズ状態返却コールバック
+    fvControlView.callbackPaused(function () {
+      return fvVideoView.getOriginVideoFront().paused;
+    });
+
+    // ミュート状態返却コールバック
+    fvControlView.callbackMuted(function () {
+      return fvVideoView.getOriginVideoFront().muted;
+    });
+
+    // 再生/停止ボタントグル 監視処理開始
+    requestAnimationFrame($func.playPauseMonitoring);
+
+    // 再生操作コールバック
+    fvControlView.callbackPlay(function () {
+      fvVideoView.hidePlayScreen();
+      fvVideoView.getOriginVideoFront().play();
+    });
+
+    // 停止操作コールバック
+    fvControlView.callbackPause(function () {
+      fvVideoView.getOriginVideoFront().pause();
+    });
+
+    // ミュート操作コールバック
+    fvControlView.callbackToggleMute(function () {
+      var frontVideo = fvVideoView.getOriginVideoFront();
+      frontVideo.muted = !frontVideo.muted;
+      fvVideoView.getOriginVideoBack().muted = frontVideo.muted;
+      fvControlView.disabledVolume(frontVideo.muted);
+    });
+
+    // 停止操作コールバック
+    fvControlView.callbackFullscreen(function () {
+      $func.changeFullscreen();
+    });
+
+    // フルスクリーンイベント
+    $wrapper.bind(
+      "webkitfullscreenchange mozfullscreenchange fullscreenchange msfullscreenchange",
+      function (e) {
+        $func.resize();
+      }
+    );
+
+    // Call back for Long Rewind Button
+    fvControlView.callbackRwdLong(function () {
+      if (fvVideoView.isSwitching() === true) {
+        common.log("skip operation during switching");
+        return;
+      }
+      var originVideo = fvVideoView.getOriginVideoFront();
+      var t = originVideo.currentTime - common.getLongRange();
+      isSeekingByUser = true;
+      originVideo.currentTime = t > 0 ? t : 0;
+    });
+
+    // Call back for Short Rewind Button
+    fvControlView.callbackRwdShort(function () {
+      if (fvVideoView.isSwitching() === true) {
+        common.log("skip operation during switching");
+        return;
+      }
+      var originVideo = fvVideoView.getOriginVideoFront();
+      var t = originVideo.currentTime - common.getShortRange();
+      isSeekingByUser = true;
+      originVideo.currentTime = t > 0 ? t : 0;
+    });
+
+    // Call back for Short FastForward Button
+    fvControlView.callbackFwdShort(function () {
+      if (fvVideoView.isSwitching() === true) {
+        common.log("skip operation during switching");
+        return;
+      }
+
+      var originVideo = fvVideoView.getOriginVideoFront();
+      var t = originVideo.currentTime + common.getShortRange();
+      var max = originVideo.seekable.end(0) - originVideo.seekable.start(0);
+
+      //var max = fvVideoView.originVideo_front.duration;
+      if (isDVR) max -= dvrBufferOffset;
+      if (t < max) {
+        //console.log("FwdShort(Done) t="+t+" max="+max);
+        isSeekingByUser = true;
+        originVideo.currentTime = t;
+      } else {
+        //console.log("FwdShort(Skip) t="+t+" max="+max);
+      }
+    });
+
+    // Call back for Long FastForward Button
+    fvControlView.callbackFwdLong(function () {
+      if (fvVideoView.isSwitching() === true) {
+        common.log("skip operation during switching");
+        return;
+      }
+
+      var originVideo = fvVideoView.getOriginVideoFront();
+      var t = originVideo.currentTime + common.getLongRange();
+      //var max = fvVideoView.originVideo_front.duration;
+      var max = originVideo.seekable.end(0) - originVideo.seekable.start(0);
+
+      if (isDVR) max -= dvrBufferOffset;
+      if (t < max) {
+        //console.log("FwdLong(Done) t="+t+" max="+max);
+        isSeekingByUser = true;
+        originVideo.currentTime = t;
+      }
+    });
+
+    // Call back for LiveHead Button
+    fvControlView.callbackLiveHead(function () {
+      if (fvVideoView.isSwitching() === true) {
+        common.log("skip operation during switching");
+        return;
+      }
+      if (isDVR) {
+        var originVideo = fvVideoView.getOriginVideoFront();
+        var duration =
+          originVideo.seekable.end(0) - originVideo.seekable.start(0);
+        var livehead = duration - dvrBufferOffset;
+        isSeekingByUser = true;
+        originVideo.currentTime = livehead;
+      }
+    });
+
+    // ライブ開始時刻返却コールバック
+    fvControlView.callbackLiveStartTime(function () {
+      return liveStartTime;
+    });
+
+		// 1画面モードコールバック
+		fvControlView.callbackTheaterMode(function(){
+			$func.changeTheaterMode();
+		});
+
+    // 1画面モードのOFF→ON時にキャプションビューのサイズを復旧
+		fvVideoView.callbackCamViewResize(function() {
+      var camW = 100 / opt.col; // 横分割率
+      var camH = 100 / opt.row; // 縦分割率
+      var cpl = fvVideoView.getClickPointList();
+      for ( var i=0; i<cpl.length; i++ ) {
+        var cam = opt.cameras[i];
+        var left = camW * cam.x + "%";
+        var top = Math.round(camH * cam.y) + "%";
+        var width = camW * cam.level + "%";
+        var height = camH * cam.level + "%";
+        var cp = cpl[i].element;
+        cp.css('top',top).css('left',left).width(width).height(height);
+      }
+      console.log("callbackCamViewResize called");
+    });
+
+    //$func.resize();
+    $w.bind("resize", $func.resize);
+
+    if (common.isMobile()) {
+      var hidden, visibilityChange;
+      if (typeof document.hidden !== "undefined") {
+        hidden = "hidden";
+        visibilityChange = "visibilitychange";
+      } else if (typeof document.mozHidden !== "undefined") {
+        hidden = "mozHidden";
+        visibilityChange = "mozvisibilitychange";
+      } else if (typeof document.msHidden !== "undefined") {
+        hidden = "msHidden";
+        visibilityChange = "msvisibilitychange";
+      } else if (typeof document.webkitHidden !== "undefined") {
+        hidden = "webkitHidden";
+        visibilityChange = "webkitvisibilitychange";
+      }
+      document.addEventListener(
+        visibilityChange,
+        function () {
+          if (document.hidden) {
+            fvVideoView.getOriginVideoFront().pause();
+            common.sendStatEvent("background");
+          } else {
+            if (fvVideoView.getOriginVideoFront().paused) {
+              fvVideoView.getOriginVideoFront().play();
+            }
+            common.sendStatEvent("foreground");
+          }
+        },
+        false
+      );
+    }
+
+    // FIXME: スワイプが動作しない原因調査
+    /*
+		// 指が触れたか検知
+		$(window).on('touchstart', function(e){
+			tm_start = common.getCurrentMs();
+			position = e.originalEvent.touches[0].pageX;
+			direction = ''; // 一度リセットする
+      console.log("touchstart selectedCamIdx="+selectedCamIdx);
+		});
+
+	 //指が離れたか検知
+		$(window).on('touchend', function(e){
+			var tm_now = common.getCurrentMs();
+			if (tm_now - tm_start > 200) {
+				return;
+			}
+			eventPosX = e.originalEvent.changedTouches[0].pageX;
+			if (position - eventPosX > 40) {        // 40px以上移動しなければスワイプと判断しない
+				direction = 'left';  // 左と検知
+			} else if (position - eventPosX < -40){
+				direction = 'right'; // 右と検知
+			}
+      num_camera = (opt.cameras.length-1);
+
+      // selectedCamIdx が1-7の前提
+      if (direction == 'right'){
+				idx = selectedCamIdx+1;
+        if (idx == opt.cameras.length) { // 8 => 1
+          idx = 1;
+        }
+			} else if (direction == 'left'){
+				idx = selectedCamIdx-1;
+				if (idx == 0) { // 1 => 7
+          idx = num_camera;
+        }
+			}
+      var tag = fvVideoView.getClickPointList()[idx].tag;
+      var $cam = $('li[data-tag=' + tag + ']',fvVideoView.clickPointWrapper);
+      $cam.click();
+      console.log("swipe detected selectedCamIdx="+selectedCamIdx+" idx="+idx+" tag="+tag);
+		});
+    */
+
+    function exitHandler() {
+      common.log("exitHandler");
+      var w = $("#" + targetWrapperId, window.parent.document);
+      var e = $("iframe", w).get(0);
+      var doc;
+      if (e.ownerDocument) {
+        doc = e.ownerDocument;
+      } else {
+        doc = e;
+      }
+      if (
+        !doc.fullscreenElement &&
+        !doc.webkitIsFullScreen &&
+        !doc.mozFullScreen &&
+        !doc.msFullscreenElement
+      ) {
+        //fvVideoView.changeFullscreen(); // これOK ?
+        common.sendStatEvent("exit_fullscreen");
+      }
+    }
+
+    // ESC検知
+    var w = $("#" + targetWrapperId, window.parent.document);
+    var e = $("iframe", w).get(0); // javascript obj
+    var doc;
+    if (e.ownerDocument) {
+      doc = e.ownerDocument;
+    } else {
+      doc = e;
+    }
+
+    doc.addEventListener("fullscreenchange", exitHandler);
+    doc.addEventListener("webkitfullscreenchange", exitHandler);
+    doc.addEventListener("mozfullscreenchange", exitHandler);
+    doc.addEventListener("MSFullscreenChange", exitHandler);
+
+    $(document).on("keyup", function (e) {
+      // iframeの外へキーイベント送出時は以下をコメントアウト
+      // parent.$(parent.document).trigger(e);
+
+      common.handleKeyEvent(e, player_ref); //
+    });
+
+    if (isReady == false) {
+      isReady = true;
+
+      player_ref = {
+        originVideo: fvVideoView.getOriginVideoFront(),
+
+        setReady: function (status) {
+          isReady = status;
+        },
+
+        getReady: function () {
+          return isReady;
+        },
+
+        isBackup: function () {
+          return enableBackup;
+        },
+
+        isLive: function () {
+          return opt.isLive;
+        },
+
+        isDVR: function () {
+          return isDVR;
+        },
+
+        isFlash: function () {
+          return false;
+        },
+
+        activeSysNo: function () {
+          return enableBackup == true ? 1 : 0;
+        },
+
+        // メインメディアに切り替え
+        changeMainMedia: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip changeMainMedia during switching");
+            return;
+          }
+          var $cam = $("li.fvSelected", fvVideoView.clickPointWrapper);
+          var src = $cam.attr("data-src");
+          // メディア切り替え
+          $func.changeMedia(src);
+          enableBackup = false;
+        },
+
+        // バックアップメディアに切り替え
+        changeBackupMedia: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip changeBackupMedia during switching");
+            return;
+          }
+          var $cam = $("li.fvSelected", fvVideoView.clickPointWrapper);
+          var src = $cam.attr("data-backupSrc");
+          // メディア切り替え
+          $func.changeMedia(src);
+          enableBackup = true;
+        },
+
+        isBeforePlay: function () {
+          if (
+            $tutorialScreenView.is(":visible") ||
+            fvVideoView.isPlayScreenVisible()
+          ) {
+            return true;
+          } else {
+            return false;
+          }
+        },
+
+        // 再生
+        play: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          if ($tutorialScreenView.is(":visible")) {
+            $tutorialScreenView.click();
+          } else if (fvVideoView.isPlayScreenVisible()) {
+            fvVideoView.playScreenView.click();
+          } else {
+            fvVideoView.getOriginVideoFront().play();
+          }
+        },
+
+        // 停止
+        pause: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          fvVideoView.getOriginVideoFront().pause();
+        },
+
+        mute: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          //console.log("mute");
+          fvVideoView.getOriginVideoFront().muted = true;
+          fvControlView.disabledVolume(fvVideoView.getOriginVideoFront().muted);
+        },
+
+        unmute: function () {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          //console.log("unmute");
+          fvVideoView.getOriginVideoFront().muted = false;
+          fvControlView.disabledVolume(fvVideoView.getOriginVideoFront().muted);
+        },
+
+        muted: function () {
+          return fvVideoView.getOriginVideoFront().muted;
+        },
+
+        volumeUp: function () {
+          var vol = fvControlView.getVolume();
+          vol = vol + 0.05;
+          if (vol > 1.0) vol = 1.0;
+          fvControlView.updateVolume(vol);
+        },
+
+        volumeDown: function () {
+          var vol = fvControlView.getVolume();
+          vol -= 0.05;
+          if (vol < 0) vol = 0;
+          fvControlView.updateVolume(vol);
+        },
+
+        // pause
+        paused: function () {
+          return fvVideoView.getOriginVideoFront().paused;
+        },
+
+        getDuration: function () {
+          if (isDVR) {
+            var duration =
+              fvVideoView.getOriginVideoFront().seekable.end(0) -
+              fvVideoView.getOriginVideoFront().seekable.start(0);
+            duration -= dvrBufferOffset;
+            return duration;
+          } else {
+            return fvVideoView.getOriginVideoFront().duration;
+          }
+        },
+
+        getCurrentTime: function () {
+          return fvVideoView.getOriginVideoFront().currentTime;
+        },
+
+        setCurrentTime: function (currentTime) {
+          isSeekingByUser = true;
+          fvVideoView.getOriginVideoFront().currentTime = currentTime;
+        },
+
+        setLogLevel: function (logLevel) {
+          common.setLogLevel(logLevel);
+        },
+
+        getLogLevel: function () {
+          return common.getLogLevel();
+        },
+
+        setLiveStartTime: function (startTime) {
+          liveStartTime = startTime;
+          console.log("playerIF setLiveStartTime:" + liveStartTime);
+        },
+
+        getLiveStartTime: function (startTime) {
+          console.log("playerIF getLiveStartTime:" + liveStartTime);
+          return liveStartTime;
+        },
+
+        toggleFullScreen: function () {
+          $func.changeFullscreen();
+        },
+
+        // カメラ切替(次)
+        nextContent: function () {
+          // 0123 IN
+          // 1234
+          // 1230 OUT
+          //console.log("nextContent start curIdx="+selectedCamIdx);
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          idx = (selectedCamIdx + 1) % fvVideoView.getClickPointList().length;
+          var tag = fvVideoView.getClickPointList()[idx].tag;
+          var tag2 = opt.cameras[idx].tag;
+          //console.log("nextContent idx="+(idx)+" tag="+tag+" tag2="+tag2);
+          var $cam = $(
+            "li[data-tag=" + tag + "]",
+            fvVideoView.clickPointWrapper
+          );
+          $cam.click();
+        },
+
+        // カメラ切替(前)
+        prevContent: function () {
+          // 0123 IN
+          // 4123 OUT(N)
+          // 3012 OUT(0..)
+          //console.log("prevContent start curIdx="+selectedCamIdx);
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip operation during switching");
+            return;
+          }
+          idx = selectedCamIdx;
+          if (idx <= 0) idx = fvVideoView.getClickPointList().length;
+          var tag = fvVideoView.getClickPointList()[idx - 1].tag;
+          //srevContent idx-1="+(idx-1)+" tag="+tag);
+          var $cam = $(
+            "li[data-tag=" + tag + "]",
+            fvVideoView.clickPointWrapper
+          );
+          $cam.click();
+        },
+
+        // カメラ切替（idx指定）
+        switchContent: function (idx) {
+          //console.log("switchContent start idx="+idx+" len="+fvVideoView.getClickPointList().length);
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip switchContent during switching");
+            return;
+          }
+          if (1 <= idx && idx <= fvVideoView.getClickPointList().length) {
+            var tag = fvVideoView.getClickPointList()[idx].tag;
+            console.log("switchContent idx="+idx+" tag="+tag);
+            var $cam = $(
+              "li[data-tag=" + tag + "]",
+              fvVideoView.clickPointWrapper
+            );
+            $cam.click();
+          }
+        },
+
+        // カメラ切替（タグ指定）
+        changeCamera: function (tag) {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("skip changeCamera during switching");
+            return;
+          }
+          var $cam = $(
+            "li[data-tag=" + tag + "]",
+            fvVideoView.clickPointWrapper
+          );
+          $cam.click();
+        },
+
+        // カメラキャプション変更
+        changeCameraCaption: function (tag, caption) {
+          var $cam = $(
+            "li[data-tag=" + tag + "]",
+            fvVideoView.clickPointWrapper
+          );
+          $(".fvCaption", $cam).text(caption);
+        },
+
+        // カメラソース変更
+        changeCameraSrc: function (tag, src_new, backupSrc) {
+          if (fvVideoView.isSwitching() === true) {
+            common.log("$$$ skip changeCamera during switching");
+            return;
+          }
+          var $cam = $(
+            "li[data-tag=" + tag + "]",
+            fvVideoView.clickPointWrapper
+          );
+          src_current = $cam.attr("data-src");
+          if (src_current != src_new) {
+            $cam.attr("data-src", src_new);
+            console.log(
+              "$$$ changeCameraSrc executed tag=" + tag + " src_new=" + src_new
+            );
+          } else {
+            console.log(
+              "$$$ changeCameraSrc skipped tag=" +
+                tag +
+                " src_new=" +
+                src_new +
+                " src_cur=" +
+                src_current
+            );
+          }
+          //$cam.attr('data-backupSrc', backupSrc);
+        },
+
+        // フルスクリーン切り替え
+        changeFullscreen: function () {
+          $func.changeFullscreen();
+        },
+
+        // プレイヤーのステータスを返す
+        readyState: function () {
+          return fvVideoView.getOriginVideoFront().readyState;
+        },
+
+        getSelectedCamIdx: function () {
+          return selectedCamIdx + 1;
+        },
+
+        getPlayerType: function () {
+          return player_type;
+        },
+
+        getContentID: function () {
+          return contentID;
+        },
+
+        getSessionID: function () {
+          return sessionID;
+        },
+
+        getCurrentQualityLevel: function () {
+          return fvVideoView.getCurrentQualityLevel();
+        },
+
+        getEstimatedSpeed: function () {
+          return fvVideoView.getEstimatedSpeed();
+        },
+
+        releaseVideoResource: function () {
+          fvVideoView.releaseVideoResource();
+        },
+
+        // Touch action control for URL bar auto-hide (iOS Safari)
+        setTouchActionMode: function (mode) {
+          if (typeof mode !== 'string') {
+            common.log("setTouchActionMode: invalid mode parameter");
+            return false;
+          }
+          
+          try {
+            // iframe内のコントロール要素制御
+            var playerBody = document.body;
+            var controlView = fvControlView.controlView[0];
+            
+            // 親ページへのメッセージ送信でコンテナ制御
+            var message = {
+              type: 'fvPlayer_touchAction',
+              mode: mode,
+              targetWrapperId: targetWrapperId
+            };
+            
+            if (mode === 'restricted') {
+              // URLバー非表示時：iframe内は操作禁止、コントロールのみ許可
+              playerBody.style.touchAction = 'none';
+              if (controlView) controlView.style.touchAction = 'auto';
+              
+              common.log("setTouchActionMode: restricted mode applied to iframe");
+              
+            } else if (mode === 'normal') {
+              // 通常時：iframe内は全操作許可
+              playerBody.style.touchAction = 'auto';
+              if (controlView) controlView.style.touchAction = 'auto';
+              
+              common.log("setTouchActionMode: normal mode applied to iframe");
+              
+            } else {
+              common.log("setTouchActionMode: unknown mode - " + mode);
+              return false;
+            }
+            
+            // 親ページに通知
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(message, '*');
+              common.log("setTouchActionMode: message sent to parent");
+            }
+            
+            return true;
+            
+          } catch (error) {
+            common.log("setTouchActionMode: error - " + error.message);
+            return false;
+          }
+        },
+
+        // Touch action state inquiry (iframe側のみ)
+        getTouchActionMode: function () {
+          try {
+            var playerBody = document.body;
+            var touchAction = playerBody.style.touchAction;
+            
+            if (touchAction === 'none') {
+              return 'restricted';
+            } else if (touchAction === 'auto' || touchAction === '') {
+              return 'normal';
+            } else {
+              return 'unknown';
+            }
+          } catch (error) {
+            common.log("getTouchActionMode: error - " + error.message);
+            return 'error';
+          }
+        },
+
+        // Enable touch action for specific element within iframe
+        enableTouchActionForElement: function (selector) {
+          if (typeof selector !== 'string') {
+            common.log("enableTouchActionForElement: invalid selector parameter");
+            return false;
+          }
+          
+          try {
+            var elements = document.querySelectorAll(selector);
+            for (var i = 0; i < elements.length; i++) {
+              elements[i].style.touchAction = 'auto';
+            }
+            
+            common.log("enableTouchActionForElement: applied to " + elements.length + " elements");
+            return elements.length > 0;
+            
+          } catch (error) {
+            common.log("enableTouchActionForElement: error - " + error.message);
+            return false;
+          }
+        },
+      }; // player_ref
+
+      common.setPlayerRef(player_ref);
+
+      // onReadyイベント実行
+      if (opt["onReady"]) {
+        opt.onReady(player_ref);
+      }
+
+      // start polling
+      if (polling_active) {
+        common.resetPollingInterval(opt["statsInterval"]);
+      }
+      if (polling_subdata) {
+        common.startPollingSubData(opt["polling_subdata"]);
+      }
+      common.sendStatEvent("ready");
+    } // if (isReady == false) {
+  }); // 	$(function($){
+}; // var FvLivePlayer = function(targetWrapperId, opt){
+
+/**************************************************************************
+ * 指定された名称のスクリプトが含まれるDOMを探索
+ **************************************************************************/
+function findScriptNode(scriptname) {
+  // ドキュメント内のすべてのscriptタグを取得
+  var scriptTags = document.getElementsByTagName("script");
+
+  // 各scriptタグをループしてチェック
+  for (var i = 0; i < scriptTags.length; i++) {
+    var scriptTag = scriptTags[i];
+
+    // scriptタグのsrc属性に指定の文字列が含まれるか
+    var src = scriptTag.getAttribute("src");
+    if (src && src.includes(scriptname)) {
+      return scriptTag;
+    }
+  }
+
+  // 該当するタグが見つからない場合はnullを返す
+  return null;
+}
+
+/**************************************************************************
+ * 必要なモジュールを読み込む
+ **************************************************************************/
+function loadGnzoFvModules(mods) {
+  // ↓ 23.9.29 一部のブラウザ拡張が挿入するDOMでないタグが探索経路にあると動作しないため修正
+  // var cs = (function(e){return e.nodeName.toLowerCase() == 'script' ? e : arguments.callee(e.lastChild)})(document);
+  var cs = findScriptNode("player.min.js");
+  var FV_JS_SRC = cs.src;
+  var FV_SCRIPT_BASE = FV_JS_SRC.substr(0, FV_JS_SRC.lastIndexOf("/")) + "/";
+  var FV_SCRIPT_BASE =
+    FV_SCRIPT_BASE.substr(0, FV_JS_SRC.lastIndexOf("/")) + "/";
+  for (var i = 0; i < mods.length; i++) {
+    var mod = mods[i];
+    if (mod.indexOf(".css") >= 0) {
+      if (mod.indexOf("//") == 0) {
+        document.write(
+          '<link rel="stylesheet" href="' +
+            mod +
+            '" crossorigin="anonymous"></link>'
+        );
+      } else {
+        document.write(
+          '<link rel="stylesheet" href="' +
+            FV_SCRIPT_BASE +
+            "css/" +
+            mod +
+            '" crossorigin="anonymous"></link>'
+        );
+      }
+    } else if (mod.indexOf(".js") >= 0) {
+      if (mod.indexOf("//") == 0) {
+        document.write(
+          '<script src="' + mod + '" crossorigin="anonymous"></script>'
+        );
+      } else {
+        document.write(
+          '<script src="' +
+            FV_SCRIPT_BASE +
+            mod +
+            '" crossorigin="anonymous"></script>'
+        );
+      }
+    }
+  }
+}

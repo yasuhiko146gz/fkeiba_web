@@ -59,25 +59,51 @@
     }
 
     /**
-     * iPhone Safari URLバー自動非表示処理
+     * iPhone Safari URLバー自動非表示処理（強化版）
      */
     function handleUrlBarAutoHide() {
+      console.log('handleUrlBarAutoHide呼び出し:', {
+        isIOSDevice: isIOSDevice(),
+        isMobileLandScape: isMobileLandScape(),
+        orientation: getOrientation(),
+        userAgent: navigator.userAgent
+      });
+      
       if (!isIOSDevice() || !isMobileLandScape()) {
+        console.log('iOSまたは横向きではないため、URLバー非表示処理をスキップ');
+        // 既存のオーバーレイがあれば削除
+        removeUrlBarOverlay();
+        // body状態もリセット
+        document.body.classList.remove('ios-landscape', 'urlbar-visible', 'urlbar-hidden');
         return;
       }
       
-      // iOS用CSSクラスを追加
+      // iOS横向き時の基本クラスを追加
       document.body.classList.add('ios-landscape');
+      
+      // URLバー表示状態をチェックしてオーバーレイ表示を判定
+      updateUrlBarOverlay();
+      
+      // 即座に実行
+      hideUrlBarIfNeeded();
       
       // 少し遅延してからURLバー隠し処理を実行
       setTimeout(function() {
         hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
       }, 150);
       
       // 念のため追加で実行（端末によってタイミングが異なる場合がある）
       setTimeout(function() {
         hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
       }, 400);
+      
+      // さらに遅延して実行
+      setTimeout(function() {
+        hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
+      }, 800);
     }
 
     /**
@@ -88,39 +114,9 @@
       if (isUrlBarVisible()) {
         // 微小なスクロールでURLバーを隠す
         window.scrollTo(0, 1);
-      }
-    }
-
-    /**
-     * iPhone Safari URLバー自動非表示処理
-     */
-    function handleUrlBarAutoHide() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
-        return;
-      }
-      
-      // iOS用CSSクラスを追加
-      document.body.classList.add('ios-landscape');
-      
-      // 少し遅延してからURLバー隠し処理を実行
-      setTimeout(function() {
-        hideUrlBarIfNeeded();
-      }, 150);
-      
-      // 念のため追加で実行（端末によってタイミングが異なる場合がある）
-      setTimeout(function() {
-        hideUrlBarIfNeeded();
-      }, 400);
-    }
-
-    /**
-     * URLバーが表示されている場合に隠す処理
-     */
-    function hideUrlBarIfNeeded() {
-      // URLバー表示状態をチェック
-      if (isUrlBarVisible()) {
-        // 微小なスクロールでURLバーを隠す
-        window.scrollTo(0, 1);
+        console.log('window.scrollTo(0, 1)を実行しました');
+      } else {
+        console.log('URLバーはすでに非表示です');
       }
     }
 
@@ -136,6 +132,65 @@
       // 画面の幅と高さの差でURLバーの表示状態を判定
       var heightDiff = screen.width - window.innerHeight;
       return heightDiff > 20;
+    }
+
+    /**
+     * URLバー状態に応じてオーバーレイの表示/非表示を制御
+     */
+    function updateUrlBarOverlay() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        removeUrlBarOverlay();
+        return;
+      }
+      
+      var urlBarVisible = isUrlBarVisible();
+      console.log('updateUrlBarOverlay - URLバー表示状態:', urlBarVisible);
+      
+      if (urlBarVisible) {
+        // URLバー表示中：オーバーレイを表示してスクロール可能状態
+        createUrlBarOverlay();
+        document.body.classList.add('urlbar-visible');
+        document.body.classList.remove('urlbar-hidden');
+      } else {
+        // URLバー非表示：オーバーレイを隠してスクロール禁止状態
+        removeUrlBarOverlay();
+        document.body.classList.add('urlbar-hidden');
+        document.body.classList.remove('urlbar-visible');
+      }
+    }
+
+    /**
+     * URLバー隠し用オーバーレイを作成・表示
+     */
+    function createUrlBarOverlay() {
+      // 既存のオーバーレイがあるか確認
+      var existingOverlay = document.getElementById('url-bar-overlay');
+      if (existingOverlay) {
+        existingOverlay.style.display = 'flex';
+        return;
+      }
+      
+      // 新しいオーバーレイを作成
+      var overlay = document.createElement('div');
+      overlay.id = 'url-bar-overlay';
+      overlay.innerHTML = '&#8593;&#8595;&nbsp;スワイプしてURLバーを隠す';
+      overlay.style.display = 'flex';
+      
+      // bodyの最初に挿入（最上位に表示）
+      document.body.insertBefore(overlay, document.body.firstChild);
+      
+      console.log('URLバー隠し用オーバーレイを作成しました');
+    }
+
+    /**
+     * URLバー隠し用オーバーレイを削除
+     */
+    function removeUrlBarOverlay() {
+      var overlay = document.getElementById('url-bar-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        console.log('URLバー隠し用オーバーレイを非表示にしました');
+      }
     }
     gtag('js', new Date());
 
