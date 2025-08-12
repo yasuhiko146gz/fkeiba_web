@@ -125,7 +125,7 @@
       </div>
 
       <!-- モバイル縦向き用透明iframe -->
-      <iframe id="mobile-overlay-iframe" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: white; opacity: 0; z-index: 9999; border: none; pointer-events: none;"></iframe>
+      <iframe id="mobile-overlay-iframe" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f0f0f0; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
     </div>
   </div>
 
@@ -585,9 +585,9 @@
         const isPlayerVisible = $('#fvPlayer').is(':visible');
         
         if (isPlayerVisible) {
-          // 縦向き時は画面高さ + 1pxでiframeの高さを設定
+          // 縦向き時は画面高さ + 100pxでiframeの高さを設定
           const windowHeight = window.innerHeight;
-          mobileIframe.style.height = (windowHeight + 1) + 'px';
+          mobileIframe.style.height = (windowHeight + 100) + 'px';
         } else {
           // プレーヤー非表示時はデフォルトサイズ
           mobileIframe.style.height = '100vh';
