@@ -44,6 +44,11 @@
   <!-- ICON -->
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
+  <!-- resetcss -->
+  <!--
+  <link rel="stylesheet" type="text/css" href="https://yui.yahooapis.com/3.18.1/build/cssreset/cssreset-min.css">
+  -->
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-HRW2S9NW67"></script>
   <script>
@@ -58,17 +63,21 @@
 </script>
 
   <!-- fvLivePlayer -->
-<!--
   <script src="./js/fvLivePlayer/lib/platform.js"></script>
   <script src="./js/fvLivePlayer/embed.min.js"></script>
---->
+<!--
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/lib/platform.js"></script>
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/embed.min.js"></script>
+  -->
 
+  <!-- YouTube Liveコメント表示CSS -->
+  <link href="./css/youtube-comments.css" rel="stylesheet" type="text/css">
   <!-- main style -->
   <link href="./css/style.css" rel="stylesheet" type="text/css">
   <!-- main js -->
   <script type="text/javascript" src="./js/main.js"> </script>
+  <!-- YouTube Liveコメント表示JS -->
+  <!-- <script type="text/javascript" src="./js/youtube-comments.js"> </script> -->
 
 </head>
 
@@ -97,9 +106,26 @@
       <ul></ul>
     </div>
 
-    <div class="video">
-      <div id='fvPlayer'></div>
-      <div id="cover"><span></span></div>
+    <!-- メインコンテンツラッパー -->
+    <div class="main-content-wrapper">
+      <!-- プレーヤーとコメントのレスポンシブコンテナ -->
+      <div class="player-comments-container">
+        <!-- プレーヤーエリア -->
+        <div class="video-player-area">
+          <div class="video">
+            <div id='fvPlayer'></div>
+            <div id="cover"><span></span></div>
+          </div>
+        </div>
+
+        <!-- YouTube Liveコメントエリア -->
+        <div class="youtube-comments-wrapper">
+          <div id="youtube-comments-container"></div>
+        </div>
+      </div>
+
+      <!-- モバイル縦向き用透明iframe -->
+      <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: red; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
     </div>
   </div>
 
@@ -224,10 +250,16 @@
               <tbody>
                 <h3>注意事項</h3>
                 <tr>
+                  <!-- <th><p>注意事項</p></th> -->
                   <td>
                     <p>wifi環境など高速通信（下り3Mbps以上）が可能な電波の良い所でご視聴ください。</p>
                     <p>回線状況や電波状況の悪い環境下では、読み込みに時間がかかる場合があります。</p>
                     <p>モバイルWi-Fi、スマートフォンをご利用の際は、ご契約をされております通信会社のWebサイトに記載の注意事項をご確認の上ご利用ください。</p>
+                    <!-- <a href="https://www.nttdocomo.co.jp/info/safety/packet.html" target="_blank">NTT docomo</a><br>
+                    <a href="https://www.softbank.jp/mobile/support/procedure/charge_guide/trouble/confirm/" target="_blank">SoftBank</a><br>
+                    <a href="https://www.au.kddi.com/mobile/charge/reference/packet-caution/" target="_blank">au</a><br>
+                    <a href="https://www.uqwimax.jp/service/speedlimt_pop02.html" target="_blank">UQ WIMAX</a><br>
+                    ※上記以外のキャリアをご利用の方はご自身の契約内容をご確認のうえご視聴ください。 -->
                     <br>
                     <p>本配信は、スマートフォン、パソコン、タブレットのブラウザ上で無料視聴可能ですが、インターネット接続に関わる通信料は利用者様のご負担となります。</p>
                     <br>
@@ -343,6 +375,7 @@
         ],
 
         onReady: function(player) {
+          //console.log("HTML onReady");
           // Windowsでプレイヤーの表示が崩れるの対応
           setTimeout(function() {
             $(window).trigger("resize");
@@ -354,6 +387,21 @@
         }
       }
     );
+
+    function debugLog(message, limit = 100) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ja-JP', {
+        hour12: false
+      }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
+      const formattedMessage = `[${timeStr}] ${message}`;
+
+      $('#debug').append('<p>' + $('<div>').text(formattedMessage).html() + '</p>');
+
+      const lines = $('#debug p');
+      if (lines.length > limit) {
+        lines.first().remove();
+      }
+    }
 
     function getOrientation() {
       // Screen Orientation API available?
@@ -449,26 +497,27 @@
       // 前回と向きが変わった時のみ実施
       if (newOrientation !== _lastOrientation) {
         _lastOrientation = newOrientation;
+        //console.log('orientation changed → ' + newOrientation);
         if (isMobileDevice()) {
           if (getOrientation() == "landscape") {
             $('#header-container').hide();
             $('#ticker').hide();
             $('.archive-notice').hide();
-            
+
             // iPhone Safari URLバー自動非表示機能
             handleUrlBarAutoHide();
           } else {
             $('#header-container').show();
             $('#ticker').show();
             $('.archive-notice').show();
-            
-            // 縦向き時はiOS用CSSクラスとスタイルを削除
+
+            // 縦向き時はiOS用CSSクラスを削除
             if (isIOSDevice()) {
               document.body.classList.remove('ios-landscape');
-              document.body.style.height = '';
-              document.body.style.overflowY = '';
-              console.log('ios-landscapeクラスとスタイルを削除しました');
             }
+
+            // モバイル縦向き時の透明iframe制御
+            handleMobilePortraitIframe();
           }
         }
         adjustCoverImageHeight();
@@ -479,41 +528,22 @@
      * iPhone Safari URLバー自動非表示処理
      */
     function handleUrlBarAutoHide() {
-      console.log('handleUrlBarAutoHide呼び出し:', {
-        isIOSDevice: isIOSDevice(),
-        isMobileLandScape: isMobileLandScape(),
-        orientation: getOrientation(),
-        userAgent: navigator.userAgent
-      });
-      
       if (!isIOSDevice() || !isMobileLandScape()) {
-        console.log('iOSまたは横向きではないため、URLバー非表示処理をスキップ');
         return;
       }
-      
-      // CSSクラスとJavaScriptで両方からスタイルを適用して確実にスクロール可能状態を作る
+
+      // iOS用CSSクラスを追加
       document.body.classList.add('ios-landscape');
-      document.body.style.height = 'calc(100vh + 1px)';
-      document.body.style.overflowY = 'auto';
-      console.log('ios-landscapeクラスとスタイルを追加しました');
-      
-      // 即座に実行
-      hideUrlBarIfNeeded();
-      
+
       // 少し遅延してからURLバー隠し処理を実行
       setTimeout(function() {
         hideUrlBarIfNeeded();
       }, 150);
-      
+
       // 念のため追加で実行（端末によってタイミングが異なる場合がある）
       setTimeout(function() {
         hideUrlBarIfNeeded();
       }, 400);
-      
-      // さらに遅延して実行
-      setTimeout(function() {
-        hideUrlBarIfNeeded();
-      }, 800);
     }
 
     /**
@@ -521,23 +551,12 @@
      */
     function hideUrlBarIfNeeded() {
       // URLバー表示状態をチェック
-      var urlBarVisible = isUrlBarVisible();
-      var heightDiff = screen.width - window.innerHeight;
-      
-      console.log('hideUrlBarIfNeeded呼び出し:', {
-        urlBarVisible: urlBarVisible,
-        screenWidth: screen.width,
-        windowInnerHeight: window.innerHeight,
-        heightDiff: heightDiff,
-        threshold: 20
-      });
-      
-      if (urlBarVisible) {
+      if (isUrlBarVisible()) {
         // 微小なスクロールでURLバーを隠す
         window.scrollTo(0, 1);
-        console.log('window.scrollTo(0, 1)を実行しました');
-      } else {
-        console.log('URLバーはすでに非表示です');
+
+        // デバッグログ
+        console.log('URLバー非表示処理を実行しました');
       }
     }
 
@@ -549,10 +568,82 @@
       if (!isIOSDevice() || !isMobileLandScape()) {
         return false;
       }
-      
+
       // 画面の幅と高さの差でURLバーの表示状態を判定
       var heightDiff = screen.width - window.innerHeight;
       return heightDiff > 20;
+    }
+
+    /**
+    * モバイル縦向き時の透明iframeサイズ調整
+    */
+    function handleMobilePortraitIframe() {
+    const mobileIframe = document.getElementById('mobile-overlay-iframe');
+
+    if (isMobileDevice() && getOrientation() === 'portrait') {
+    // プレーヤーが表示されているかチェック
+    const isPlayerVisible = $('#fvPlayer').is(':visible');
+
+    if (isPlayerVisible) {
+    // ヘッダー高さを取得
+    const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
+
+    // ティッカー高さを取得
+    const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
+
+    // アーカイブ通知高さを取得
+    const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
+
+    // プレーヤー高さを取得
+    const playerHeight = $('.video-player-area').outerHeight() || 0;
+
+    // 画面全体の高さ
+    const windowHeight = window.innerHeight;
+
+    // プレーヤーの下から開始するtop位置を計算
+    const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
+
+    // 残りの高さを計算
+    const remainingHeight = windowHeight - iframeTop;
+
+    // 残りの高さ + 10pxでiframeの高さを設定
+    const iframeHeight = remainingHeight + 10;
+
+    mobileIframe.style.top = iframeTop + 'px';
+    mobileIframe.style.height = iframeHeight + 'px';
+
+    // ページ全体の高さをiframeの最下部まで含むように設定
+    const totalPageHeight = iframeTop + iframeHeight;
+    document.body.style.minHeight = totalPageHeight + 'px';
+    document.getElementById('container').style.minHeight = totalPageHeight + 'px';
+
+    // デバッグ情報をコンソールに出力
+    console.log('iframe調整:', {
+    windowHeight: windowHeight,
+    headerHeight: headerHeight,
+    tickerHeight: tickerHeight,
+      archiveNoticeHeight: archiveNoticeHeight,
+        playerHeight: playerHeight,
+      iframeTop: iframeTop,
+      remainingHeight: remainingHeight,
+      iframeHeight: iframeHeight,
+        totalPageHeight: totalPageHeight
+        });
+      } else {
+          // プレーヤー非表示時はデフォルト位置
+          mobileIframe.style.top = '0px';
+          mobileIframe.style.height = '100vh';
+
+          // ページ高さをリセット
+          document.body.style.minHeight = 'auto';
+          document.getElementById('container').style.minHeight = 'auto';
+        }
+      } else {
+        // 横向き時はページ高さをリセット
+        document.body.style.minHeight = 'auto';
+        document.getElementById('container').style.minHeight = 'auto';
+      }
+      // 横向き時はサイズ変更しない（そのまま）
     }
 
     // 端末向き変更時のイベント登録 複数イベントで登録し、ハンドラ側でデバウンス処理を行う
@@ -566,7 +657,7 @@
     if (window.visualViewport) {
       visualViewport.addEventListener('resize', handleOrientationChange, false);
     }
-    
+
     // URLバー状態変化の監視（iOS用）
     if (isIOSDevice()) {
       window.addEventListener('resize', function() {
@@ -592,21 +683,43 @@
       }
 
       if ($('#fvPlayer').is(':visible')) {
+        // レスポンシブレイアウト対応：プレーヤーエリアの幅を基準にする
+        var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
+
+        // 1024px以上の場合は、コメント欄分の幅を考慮
+        if (windowWidth >= 1024) {
+          // 画面幅に応じてコメント欄幅を計算
+          var commentWidth;
+          if (windowWidth <= 1440) {
+            commentWidth = 300; // 1024px-1440px: 300px
+          } else {
+            commentWidth = 400; // 1441px以上: 400px
+          }
+
+          // コメント欄 + gapを引く
+          var availableWidth = windowWidth - (commentWidth + 24);
+          // プレーヤーエリアの実際の幅と比較して小さい方を使用
+          availableWidth = Math.min(availableWidth, playerAreaWidth);
+        } else {
+          var availableWidth = playerAreaWidth;
+        }
+
         new_width = (contentHeight - 47) * 16 / 9;
-        
-        if (new_width < windowWidth) {
+        //console.log("contentHeight:" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+
+        if (new_width < availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice()) {
             new_width = windowHeight * 16 / 9;
-            $('#fvPlayer').width(new_width + 'px');
+            $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
           } else {
             $('#fvPlayer').width(new_width + 'px');
           }
         } else {
-          $('#fvPlayer').width(windowWidth + 'px');
+          $('#fvPlayer').width(availableWidth + 'px');
         }
       }
-      
+
       // main.jsの関数も呼び出してレイアウトを同期
       if (typeof updatePlayerLayout === 'function') {
         updatePlayerLayout();
@@ -622,10 +735,10 @@
       },
 
       updateRaceInfo: function(race_idx) {
-        // コメントアウトされた処理
       },
       updateCover: function(flg) {
         if (flg == 0) {
+          //console.log("cover hide");
           $("#cover").hide();
           $("#cover span").empty();
           $("#fvPlayer").show();
@@ -637,14 +750,20 @@
             ((ua.indexOf("win") != -1) && (ua.indexOf("trident") != -1)) ||
             ((ua.indexOf("win") != -1) && (ua.indexOf("edge") != -1))
           ) {
+            //console.log("updateCover flg=" + flg + " reload");
             location.reload();
           }
         } else {
+          //console.log("cover show content:" + cover_content[flg]["content"]);
           $("#cover span").html(cover_content[flg]["content"]);
           $("#cover").show();
+          //if (player_ref != null)
+          //  player_ref.pause();
           $("#fvPlayer").hide();
         }
         adjustCoverImageHeight();
+        // プレーヤー表示状態変更時にiframe制御を実行
+        handleMobilePortraitIframe();
       },
       updateCameraName: function(data) {
         for (var i = 0; i < data.length; i++) {
@@ -667,10 +786,14 @@
     $(document).ready(function() {
       handleOrientationChange();
       adjustCoverImageHeight();
+      handleMobilePortraitIframe();
       let resizeTimer;
       $(window).on("resize", function() {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(adjustCoverImageHeight, 100);
+        resizeTimer = setTimeout(function() {
+          adjustCoverImageHeight();
+          handleMobilePortraitIframe();
+        }, 100);
       });
     });
 

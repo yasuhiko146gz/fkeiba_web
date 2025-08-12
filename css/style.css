@@ -69,13 +69,13 @@ div#container .video{
     padding: 0 !important;
     margin: 0 !important;
   }
-  
+
   div#container .video {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
-  
+
   /* プレーヤー要素も確実に幅100%にする */
   #fvPlayer {
     width: 100% !important;
@@ -500,6 +500,8 @@ div#environment table tbody tr td p.danger{
 .ios-landscape body {
   height: calc(100vh + 1px) !important;
   overflow-y: auto !important;
+  background-color: aqua;
+  opacity: 0.3;
 }
 
 .ios-landscape #container {
@@ -510,6 +512,9 @@ div#environment table tbody tr td p.danger{
 @media (max-width: 768px) and (orientation: landscape) {
   /* モバイル横向き時の基本設定 */
   .ios-landscape {
+    height: calc(100vh + 1px) !important;
     overflow-x: hidden !important;
+    background-color: aqua;
+    opacity: 1;
   }
 }
