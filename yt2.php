@@ -63,12 +63,12 @@
 </script>
 
   <!-- fvLivePlayer -->
-<!--
   <script src="./js/fvLivePlayer/lib/platform.js"></script>
   <script src="./js/fvLivePlayer/embed.min.js"></script>
--->
+<!--
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/lib/platform.js"></script>
   <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/embed.min.js"></script>
+  -->
 
   <!-- YouTube Liveコメント表示CSS -->
   <link href="./css/youtube-comments.css" rel="stylesheet" type="text/css">
@@ -77,7 +77,7 @@
   <!-- main js -->
   <script type="text/javascript" src="./js/main.js"> </script>
   <!-- YouTube Liveコメント表示JS -->
-  <script type="text/javascript" src="./js/youtube-comments.js"> </script>
+  <!-- <script type="text/javascript" src="./js/youtube-comments.js"> </script> -->
 
 </head>
 
@@ -125,7 +125,7 @@
       </div>
 
       <!-- モバイル縦向き用透明iframe -->
-      <iframe id="mobile-overlay-iframe" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #f0f0f0; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
+      <iframe id="mobile-overlay-iframe" style="position: fixed; left: 0; width: 100%; background: #f0f0f0; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
     </div>
   </div>
 
@@ -579,17 +579,53 @@
      */
     function handleMobilePortraitIframe() {
       const mobileIframe = document.getElementById('mobile-overlay-iframe');
-      
+
       if (isMobileDevice() && getOrientation() === 'portrait') {
         // プレーヤーが表示されているかチェック
         const isPlayerVisible = $('#fvPlayer').is(':visible');
-        
+
         if (isPlayerVisible) {
-          // 縦向き時は画面高さ + 100pxでiframeの高さを設定
+          // ヘッダー高さを取得
+          const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
+
+          // ティッカー高さを取得
+          const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
+
+          // アーカイブ通知高さを取得
+          const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
+
+          // プレーヤー高さを取得
+          const playerHeight = $('.video-player-area').outerHeight() || 0;
+
+          // 画面全体の高さ
           const windowHeight = window.innerHeight;
-          mobileIframe.style.height = (windowHeight + 100) + 'px';
+
+          // プレーヤーの下から開始するtop位置を計算
+          const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
+
+          // 残りの高さを計算
+          const remainingHeight = windowHeight - iframeTop;
+
+          // 残りの高さ + 100pxでiframeの高さを設定
+          const iframeHeight = remainingHeight + 100;
+
+          mobileIframe.style.top = iframeTop + 'px';
+          mobileIframe.style.height = iframeHeight + 'px';
+
+          // デバッグ情報をコンソールに出力
+          console.log('iframe調整:', {
+            windowHeight: windowHeight,
+            headerHeight: headerHeight,
+            tickerHeight: tickerHeight,
+            archiveNoticeHeight: archiveNoticeHeight,
+            playerHeight: playerHeight,
+            iframeTop: iframeTop,
+            remainingHeight: remainingHeight,
+            iframeHeight: iframeHeight
+          });
         } else {
-          // プレーヤー非表示時はデフォルトサイズ
+          // プレーヤー非表示時はデフォルト位置
+          mobileIframe.style.top = '0px';
           mobileIframe.style.height = '100vh';
         }
       }
