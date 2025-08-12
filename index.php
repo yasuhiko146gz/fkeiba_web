@@ -514,6 +514,10 @@
             // 縦向き時はiOS用CSSクラスを削除
             if (isIOSDevice()) {
               document.body.classList.remove('ios-landscape');
+<<<<<<< HEAD
+=======
+              document.body.classList.remove('ios-landscape-url-hidden');
+>>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
             }
 
             // モバイル縦向き時の透明iframe制御
@@ -535,15 +539,59 @@
       // iOS用CSSクラスを追加
       document.body.classList.add('ios-landscape');
 
+<<<<<<< HEAD
       // 少し遅延してからURLバー隠し処理を実行
+=======
+      // 自動的にURLバーを隠す処理を実行
+>>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
       setTimeout(function() {
-        hideUrlBarIfNeeded();
+        autoHideUrlBar();
       }, 150);
 
       // 念のため追加で実行（端末によってタイミングが異なる場合がある）
       setTimeout(function() {
-        hideUrlBarIfNeeded();
+        autoHideUrlBar();
       }, 400);
+<<<<<<< HEAD
+=======
+    }
+
+    /**
+     * 自動的にURLバーを隠してスクロール制御を適用
+     */
+    function autoHideUrlBar() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        return;
+      }
+
+      // URLバーを隠すためのスクロール
+      window.scrollTo(0, 1);
+
+      // URLバーが隠れたかを監視
+      setTimeout(function() {
+        checkUrlBarHiddenAndApplyControl();
+      }, 200);
+    }
+
+    /**
+     * URLバー状態を確認してスクロール制御を適用
+     */
+    function checkUrlBarHiddenAndApplyControl() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        return;
+      }
+
+      if (!isUrlBarVisible()) {
+        // URLバーが隠れた場合、スクロールを完全禁止
+        document.body.classList.add('ios-landscape-url-hidden');
+        console.log('URLバー非表示検出：スクロール制御を適用');
+      } else {
+        // まだ表示されている場合は再試行
+        setTimeout(function() {
+          autoHideUrlBar();
+        }, 300);
+      }
+>>>>>>> 11ae480f2a94038dac00393faffe72ecdbecc83a
     }
 
     /**

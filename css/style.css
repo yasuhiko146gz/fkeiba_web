@@ -496,7 +496,22 @@ div#environment table tbody tr td p.danger{
 /* ==============================================
    iPhone Safari URLバー自動非表示機能
    ============================================== */
-/* iOS横向き時のURLバー非表示対応（メディアクエリ外で確実に適用） */
+
+/* iOS横向き時のスクロール禁止制御 */
+.ios-landscape-url-hidden body,
+.ios-landscape-url-hidden #container {
+  touch-action: none !important;
+  overflow: hidden !important;
+}
+
+/* 横向き時のモバイル縦向き用iframe非表示 */
+@media (orientation: landscape) {
+  #mobile-overlay-iframe {
+    display: none !important;
+  }
+}
+
+/* 既存のios-landscapeクラス（後方互換性のため残す） */
 .ios-landscape body {
   height: calc(100vh + 1px) !important;
   overflow-y: auto !important;
@@ -506,15 +521,4 @@ div#environment table tbody tr td p.danger{
 
 .ios-landscape #container {
   min-height: 100vh !important;
-}
-
-/* iPhone横向き時の追加調整 */
-@media (max-width: 768px) and (orientation: landscape) {
-  /* モバイル横向き時の基本設定 */
-  .ios-landscape {
-    height: calc(100vh + 1px) !important;
-    overflow-x: hidden !important;
-    background-color: aqua;
-    opacity: 1;
-  }
 }
