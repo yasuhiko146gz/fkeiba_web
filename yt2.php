@@ -125,7 +125,7 @@
       </div>
 
       <!-- モバイル縦向き用透明iframe -->
-      <iframe id="mobile-overlay-iframe" style="position: fixed; left: 0; width: 100%; background: #f0f0f0; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
+      <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: red; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
     </div>
   </div>
 
@@ -575,59 +575,73 @@
     }
 
     /**
-     * モバイル縦向き時の透明iframeサイズ調整
-     */
+    * モバイル縦向き時の透明iframeサイズ調整
+    */
     function handleMobilePortraitIframe() {
-      const mobileIframe = document.getElementById('mobile-overlay-iframe');
-
-      if (isMobileDevice() && getOrientation() === 'portrait') {
-        // プレーヤーが表示されているかチェック
-        const isPlayerVisible = $('#fvPlayer').is(':visible');
-
-        if (isPlayerVisible) {
-          // ヘッダー高さを取得
-          const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
-
-          // ティッカー高さを取得
-          const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
-
-          // アーカイブ通知高さを取得
-          const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
-
-          // プレーヤー高さを取得
-          const playerHeight = $('.video-player-area').outerHeight() || 0;
-
-          // 画面全体の高さ
-          const windowHeight = window.innerHeight;
-
-          // プレーヤーの下から開始するtop位置を計算
-          const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
-
-          // 残りの高さを計算
-          const remainingHeight = windowHeight - iframeTop;
-
-          // 残りの高さ + 100pxでiframeの高さを設定
-          const iframeHeight = remainingHeight + 100;
-
-          mobileIframe.style.top = iframeTop + 'px';
-          mobileIframe.style.height = iframeHeight + 'px';
-
-          // デバッグ情報をコンソールに出力
-          console.log('iframe調整:', {
-            windowHeight: windowHeight,
-            headerHeight: headerHeight,
-            tickerHeight: tickerHeight,
-            archiveNoticeHeight: archiveNoticeHeight,
-            playerHeight: playerHeight,
-            iframeTop: iframeTop,
-            remainingHeight: remainingHeight,
-            iframeHeight: iframeHeight
-          });
-        } else {
+    const mobileIframe = document.getElementById('mobile-overlay-iframe');
+    
+    if (isMobileDevice() && getOrientation() === 'portrait') {
+    // プレーヤーが表示されているかチェック
+    const isPlayerVisible = $('#fvPlayer').is(':visible');
+    
+    if (isPlayerVisible) {
+    // ヘッダー高さを取得
+    const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
+    
+    // ティッカー高さを取得
+    const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
+    
+    // アーカイブ通知高さを取得
+    const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
+    
+    // プレーヤー高さを取得
+    const playerHeight = $('.video-player-area').outerHeight() || 0;
+    
+    // 画面全体の高さ
+    const windowHeight = window.innerHeight;
+    
+    // プレーヤーの下から開始するtop位置を計算
+    const iframeTop = headerHeight + tickerHeight + archiveNoticeHeight + playerHeight;
+    
+    // 残りの高さを計算
+    const remainingHeight = windowHeight - iframeTop;
+    
+    // 残りの高さ + 100pxでiframeの高さを設定
+    const iframeHeight = remainingHeight + 100;
+    
+    mobileIframe.style.top = iframeTop + 'px';
+    mobileIframe.style.height = iframeHeight + 'px';
+    
+    // ページ全体の高さをiframeの最下部まで含むように設定
+    const totalPageHeight = iframeTop + iframeHeight;
+    document.body.style.minHeight = totalPageHeight + 'px';
+    document.getElementById('container').style.minHeight = totalPageHeight + 'px';
+    
+    // デバッグ情報をコンソールに出力
+    console.log('iframe調整:', {
+    windowHeight: windowHeight,
+    headerHeight: headerHeight,
+    tickerHeight: tickerHeight,
+      archiveNoticeHeight: archiveNoticeHeight,
+        playerHeight: playerHeight,
+      iframeTop: iframeTop,
+      remainingHeight: remainingHeight,
+      iframeHeight: iframeHeight,
+        totalPageHeight: totalPageHeight
+        });
+      } else {
           // プレーヤー非表示時はデフォルト位置
           mobileIframe.style.top = '0px';
           mobileIframe.style.height = '100vh';
+          
+          // ページ高さをリセット
+          document.body.style.minHeight = 'auto';
+          document.getElementById('container').style.minHeight = 'auto';
         }
+      } else {
+        // 横向き時はページ高さをリセット
+        document.body.style.minHeight = 'auto';
+        document.getElementById('container').style.minHeight = 'auto';
       }
       // 横向き時はサイズ変更しない（そのまま）
     }
