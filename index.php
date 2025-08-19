@@ -313,7 +313,9 @@
             level: 3,
             tag: 'main',
             isMain: true,
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
+            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
+            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '出走表',
@@ -321,7 +323,8 @@
             y: 0,
             level: 1,
             tag: 'camera1',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
+            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '本場映像',
@@ -329,7 +332,8 @@
             y: 1,
             level: 1,
             tag: 'camera2',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv2.smil/playlist.m3u8'
+            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv2.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv2_q1/playlist.m3u8'
           },
           {
             caption: 'オッズ',
@@ -337,7 +341,8 @@
             y: 2,
             level: 1,
             tag: 'camera3',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv3.smil/playlist.m3u8'
+            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv3.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv3_q1/playlist.m3u8'
           },
           {
             caption: 'ハートビートライブ',
@@ -346,7 +351,8 @@
             level: 1,
             tag: 'camera4',
             defaultView: true,
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv4.smil/playlist.m3u8'
+            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv4.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv4_q1/playlist.m3u8'
           },
           {
             caption: 'パドック③',
@@ -354,7 +360,8 @@
             y: 3,
             level: 1,
             tag: 'camera5',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv5.smil/playlist.m3u8'
+            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv5.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv5_q1/playlist.m3u8'
           },
           {
             caption: 'パドック②',
@@ -362,7 +369,8 @@
             y: 3,
             level: 1,
             tag: 'camera6',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv6.smil/playlist.m3u8'
+            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv6.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv6_q1/playlist.m3u8'
           },
           {
             caption: 'パドック①',
@@ -370,7 +378,8 @@
             y: 3,
             level: 1,
             tag: 'camera7',
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv7.smil/playlist.m3u8'
+            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv7.smil/playlist.m3u8'
+            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv7_q1/playlist.m3u8'
           }
         ],
 
@@ -793,13 +802,12 @@
           var availableWidth = playerAreaWidth;
         }
 
-
         new_width = (contentHeight - 47) * 16 / 9;
 
         if (new_width < availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice()) {
-            new_width = window.screen.width * 16 / 9 - 47;
+            new_width = window.screen.width * 16 / 9;
             // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
             $('#fvPlayer').width(new_width + 'px');
             console.log("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
