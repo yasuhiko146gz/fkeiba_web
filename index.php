@@ -397,21 +397,6 @@
       }
     );
 
-    function debugLog(message, limit = 100) {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ja-JP', {
-        hour12: false
-      }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
-      const formattedMessage = `[${timeStr}] ${message}`;
-
-      $('#debug').append('<p>' + $('<div>').text(formattedMessage).html() + '</p>');
-
-      const lines = $('#debug p');
-      if (lines.length > limit) {
-        lines.first().remove();
-      }
-    }
-
     function getOrientation() {
       // Screen Orientation API available?
       if (screen.orientation && screen.orientation.type) {
@@ -453,6 +438,32 @@
       }
 
       return false; // その他（Android 等）は false
+    }
+
+    /**
+     * Safari ブラウザかどうかを判定する（Chrome, Firefox, Edge は除外）
+     */
+    function isSafari() {
+      const ua = navigator.userAgent.toLowerCase();
+
+      // Chrome, Firefox, Edge, iOS Chrome を除外
+      if (ua.indexOf('chrome') !== -1) return false;
+      if (ua.indexOf('crios') !== -1) return false;  // iOS Chrome
+      if (ua.indexOf('fxios') !== -1) return false;  // iOS Firefox
+      if (ua.indexOf('firefox') !== -1) return false;
+      if (ua.indexOf('edge') !== -1) return false;
+      if (ua.indexOf('edg') !== -1) return false; // 新しいEdge
+
+      // Safari を判定（WebKit + Safari + Version の組み合わせで確実に判定）
+      const isSafari = ua.indexOf('safari') !== -1 &&
+                       ua.indexOf('version') !== -1;
+
+      if (isSafari) {
+        alert ('safari detected');
+        console.log("Safari detected"); // alertの代わりにconsole.logを推奨
+      }
+
+      return isSafari;
     }
 
     /**
@@ -538,7 +549,7 @@
      * iPhone Safari URLバー自動非表示処理
      */
     function handleUrlBarAutoHide() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
+      if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
         return;
       }
 
@@ -560,7 +571,7 @@
      * 自動的にURLバーを隠してスクロール制御を適用
      */
     function autoHideUrlBar() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
+      if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
         return;
       }
 
@@ -577,7 +588,7 @@
      * URLバー状態を確認してスクロール制御を適用
      */
     function checkUrlBarHiddenAndApplyControl() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
+      if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
         // プレーヤーにも通常モードを通知
         if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
           player_ref.setTouchActionMode('normal');
@@ -618,7 +629,7 @@
      * @return {boolean} true: 表示中, false: 非表示
      */
     function isUrlBarVisible() {
-      if (!isIOSDevice() || !isMobileLandScape()) {
+      if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
         return false;
       }
 
@@ -660,7 +671,7 @@
           const remainingHeight = windowHeight - iframeTop;
 
           // 残りの高さ + 10pxでiframeの高さを設定
-          const iframeHeight = remainingHeight + 100;
+          const iframeHeight = remainingHeight + 10;
 
           mobileIframe.style.top = iframeTop + 'px';
           mobileIframe.style.height = iframeHeight + 'px';
@@ -791,7 +802,7 @@
 
         if (new_width <= availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
-          if (isMobileLandScape() && isIOSDevice()) {
+          if (isMobileLandScape() && isIOSDevice() && isSafari()) {
             // dynVh = getVhUnitPx('dvh');
             //new_width = dynVh * 16 / 9;
             new_width = window.screen.width * 16 / 9; // タブ無時はこれ
@@ -889,3 +900,4 @@
 </body>
 
 </html>
+
