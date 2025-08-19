@@ -614,20 +614,6 @@
     }
 
     /**
-     * URLバーが表示されている場合に隠す処理
-     */
-    function hideUrlBarIfNeeded() {
-      // URLバー表示状態をチェック
-      if (isUrlBarVisible()) {
-        // 微小なスクロールでURLバーを隠す
-        window.scrollTo(0, 1);
-
-        // デバッグログ
-        console.log('URLバー非表示処理を実行しました');
-      }
-    }
-
-    /**
      * URLバーが表示されているかを判定
      * @return {boolean} true: 表示中, false: 非表示
      */
