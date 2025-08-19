@@ -746,6 +746,18 @@
       return h;
     }
 
+    function getClosestVh(smallVh, largeVh, dynVh) {
+      const diffSmall = Math.abs(dynVh - smallVh);
+      const diffLarge = Math.abs(dynVh - largeVh);
+      if (diffSmall < diffLarge) {
+        return -1; // URLバーありに近い
+      } else if (diffLarge < diffSmall) {
+        return 1; // URLバーなしに近い
+      } else {
+        return 0; // 両方同じ距離
+      }
+    }
+
     // 一括取得＆表示
     function logScreenAndVhSizes() {
       const smallVh = getVhUnitPx('svh'); // URLバーあり基準
@@ -787,9 +799,16 @@
         if (new_width <= availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice() && isSafari()) {
-            // dynVh = getVhUnitPx('dvh');
-            //new_width = dynVh * 16 / 9;
-            new_width = window.screen.width * 16 / 9; // タブ無時はこれ
+            const smallVh = getVhUnitPx('svh'); // URLバーあり基準
+            const largeVh = getVhUnitPx('lvh'); // URLバーなし基準
+            const dynVh = getVhUnitPx('dvh'); // 現在の実表示
+            // new_width = dynVh * 16 / 9;
+            if (getClosestVh(smallVh, largeVh, dynVh) > 0) {
+              new_width = (largeVh) * 16 / 9; // タブ無時はこれ
+            } else {
+              new_width = (smallVh) * 16 / 9;
+              // new_width = window.screen.width * 16 / 9;
+            }
             // new_width = (contentHeight - 47) * 16 / 9; // タブ有時はこれ
             // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
             $('#fvPlayer').width(new_width + 'px');
