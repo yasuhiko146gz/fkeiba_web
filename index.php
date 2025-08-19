@@ -393,7 +393,16 @@
             $(window).trigger("resize");
           }, 200);
           player_ref = player;
-        }
+        },
+
+        onFullScreen: function () {
+          // フルスクリーン処理
+          handleUrlBarAutoHide();
+        },
+        onExitFullScreen: function () {
+          //
+        },
+
       }
     );
 
@@ -514,7 +523,7 @@
             $('.archive-notice').hide();
 
             // iPhone Safari URLバー自動非表示機能
-            handleUrlBarAutoHide();
+            // handleUrlBarAutoHide(); //FIXME:
           } else {
             $('#header-container').show();
             $('#ticker').show();
@@ -530,7 +539,7 @@
             handleMobilePortraitIframe();
           }
         }
-        adjustCoverImageHeight();
+        adjustPlayerSize();
       }
     }
 
@@ -731,7 +740,7 @@
         // URLバーが隠れた後の処理
         if (isMobileLandScape() && !isUrlBarVisible()) {
           // レイアウト再調整
-          setTimeout(adjustCoverImageHeight, 100);
+          setTimeout(adjustPlayerSize, 100);
         }
       });
     }
@@ -763,7 +772,7 @@
       );
     }
 
-    function adjustCoverImageHeight() {
+    function adjustPlayerSize() {
       // ヘッダ・フッタの固定長と画面高さを取得
       headerContainerHeight = $('#header-container').outerHeight();
       tickerHeight = $('#ticker').outerHeight();
@@ -778,7 +787,7 @@
         contentHeight = windowHeight;
       }
 
-      //console.log("@@@@@ adjustCoverImageHeight ww="+windowWidth+" wh="+windowHeight+" ch="+contentHeight);
+      //console.log("@@@@@ adjustPlayerSize ww="+windowWidth+" wh="+windowHeight+" ch="+contentHeight);
 
       if ($('#fvPlayer').is(':visible')) {
         // レスポンシブレイアウト対応：プレーヤーエリアの幅を基準にする
@@ -861,7 +870,7 @@
           //  player_ref.pause();
           $("#fvPlayer").hide();
         }
-        adjustCoverImageHeight();
+        adjustPlayerSize();
         // プレーヤー表示状態変更時にiframe制御を実行
         handleMobilePortraitIframe();
       },
@@ -885,13 +894,13 @@
 
     $(document).ready(function() {
       handleOrientationChange();
-      adjustCoverImageHeight();
+      adjustPlayerSize();
       handleMobilePortraitIframe();
       let resizeTimer;
       $(window).on("resize", function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
-          adjustCoverImageHeight();
+          adjustPlayerSize();
           handleMobilePortraitIframe();
         }, 100);
       });
