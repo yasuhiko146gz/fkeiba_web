@@ -494,9 +494,41 @@ div#environment table tbody tr td p.danger{
 }
 
 /* ==============================================
-   iPhone Safari URLバー自動非表示機能
+   iPhone Safari URLバー自動非表示機能（強化版）
    ============================================== */
-/* iOS横向き時のURLバー非表示対応（メディアクエリ外で確実に適用） */
+
+/* メインコンテナのtouch-action制御 */
+#container {
+  touch-action: auto; /* デフォルト状態：通常のタッチ操作を許可 */
+}
+
+/* URLバーが隠れた後のスクロール禁止 */
+.urlbar-hidden #container {
+  touch-action: none !important; /* 全タッチ操作禁止でスクロール防止 */
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* URLバー隠し用オーバーレイ */
+#url-bar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100vh + 1px);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  z-index: 9999;
+  touch-action: pan-y; /* 縦方向パンのみ許可 */
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* iOS横向き時のURLバー非表示対応（既存スタイルを改良） */
 .ios-landscape body {
   height: calc(100vh + 1px) !important;
   overflow-y: auto !important;
@@ -506,10 +538,32 @@ div#environment table tbody tr td p.danger{
   min-height: 100vh !important;
 }
 
+/* URLバー表示中はスクロール可能な状態を保つ */
+.ios-landscape.urlbar-visible body {
+  touch-action: pan-y !important;
+  overflow-y: auto !important;
+}
+
+.ios-landscape.urlbar-visible #container {
+  touch-action: pan-y !important;
+}
+
 /* iPhone横向き時の追加調整 */
 @media (max-width: 768px) and (orientation: landscape) {
   /* モバイル横向き時の基本設定 */
   .ios-landscape {
     overflow-x: hidden !important;
+  }
+  
+  /* URLバーが隠れた後は完全にスクロール禁止 */
+  .ios-landscape.urlbar-hidden {
+    overflow: hidden !important;
+    height: 100vh !important;
+  }
+  
+  .ios-landscape.urlbar-hidden body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    touch-action: none !important;
   }
 }

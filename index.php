@@ -58,12 +58,8 @@
 </script>
 
   <!-- fvLivePlayer -->
-<!--
   <script src="./js/fvLivePlayer/lib/platform.js"></script>
   <script src="./js/fvLivePlayer/embed.min.js"></script>
---->
-  <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/lib/platform.js"></script>
-  <script src="https://tk3.s3.ap-northeast-1.amazonaws.com/fvLivePlayer/embed.min.js"></script>
 
   <!-- main style -->
   <link href="./css/style.css" rel="stylesheet" type="text/css">
@@ -462,12 +458,13 @@
             $('#ticker').show();
             $('.archive-notice').show();
             
-            // 縦向き時はiOS用CSSクラスとスタイルを削除
+            // 縦向き時はiOS用CSSクラスとオーバーレイを削除
             if (isIOSDevice()) {
-              document.body.classList.remove('ios-landscape');
+              document.body.classList.remove('ios-landscape', 'urlbar-visible', 'urlbar-hidden');
               document.body.style.height = '';
               document.body.style.overflowY = '';
-              console.log('ios-landscapeクラスとスタイルを削除しました');
+              removeUrlBarOverlay();
+              console.log('ios-landscapeクラス、URLバー状態クラス、オーバーレイを削除しました');
             }
           }
         }
@@ -476,7 +473,7 @@
     }
 
     /**
-     * iPhone Safari URLバー自動非表示処理
+     * iPhone Safari URLバー自動非表示処理（強化版）
      */
     function handleUrlBarAutoHide() {
       console.log('handleUrlBarAutoHide呼び出し:', {
@@ -488,14 +485,18 @@
       
       if (!isIOSDevice() || !isMobileLandScape()) {
         console.log('iOSまたは横向きではないため、URLバー非表示処理をスキップ');
+        // 既存のオーバーレイがあれば削除
+        removeUrlBarOverlay();
+        // body状態もリセット
+        document.body.classList.remove('ios-landscape', 'urlbar-visible', 'urlbar-hidden');
         return;
       }
       
-      // CSSクラスとJavaScriptで両方からスタイルを適用して確実にスクロール可能状態を作る
+      // iOS横向き時の基本クラスを追加
       document.body.classList.add('ios-landscape');
-      document.body.style.height = 'calc(100vh + 1px)';
-      document.body.style.overflowY = 'auto';
-      console.log('ios-landscapeクラスとスタイルを追加しました');
+      
+      // URLバー表示状態をチェックしてオーバーレイ表示を判定
+      updateUrlBarOverlay();
       
       // 即座に実行
       hideUrlBarIfNeeded();
@@ -503,16 +504,19 @@
       // 少し遅延してからURLバー隠し処理を実行
       setTimeout(function() {
         hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
       }, 150);
       
       // 念のため追加で実行（端末によってタイミングが異なる場合がある）
       setTimeout(function() {
         hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
       }, 400);
       
       // さらに遅延して実行
       setTimeout(function() {
         hideUrlBarIfNeeded();
+        updateUrlBarOverlay();
       }, 800);
     }
 
@@ -555,6 +559,79 @@
       return heightDiff > 20;
     }
 
+    /**
+     * URLバー状態に応じてオーバーレイの表示/非表示を制御
+     */
+    function updateUrlBarOverlay() {
+      if (!isIOSDevice() || !isMobileLandScape()) {
+        removeUrlBarOverlay();
+        // プレーヤーにも通常モードを通知
+        if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+          player_ref.setTouchActionMode('normal');
+        }
+        return;
+      }
+      
+      var urlBarVisible = isUrlBarVisible();
+      console.log('updateUrlBarOverlay - URLバー表示状態:', urlBarVisible);
+      
+      if (urlBarVisible) {
+        // URLバー表示中：オーバーレイを表示してスクロール可能状態
+        createUrlBarOverlay();
+        document.body.classList.add('urlbar-visible');
+        document.body.classList.remove('urlbar-hidden');
+        
+        // プレーヤーに通常モードを通知
+        if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+          player_ref.setTouchActionMode('normal');
+        }
+      } else {
+        // URLバー非表示：オーバーレイを隠してスクロール禁止状態
+        removeUrlBarOverlay();
+        document.body.classList.add('urlbar-hidden');
+        document.body.classList.remove('urlbar-visible');
+        
+        // プレーヤーに制限モードを通知
+        if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+          player_ref.setTouchActionMode('restricted');
+        }
+      }
+    }
+
+    /**
+     * URLバー隠し用オーバーレイを作成・表示
+     */
+    function createUrlBarOverlay() {
+      // 既存のオーバーレイがあるか確認
+      var existingOverlay = document.getElementById('url-bar-overlay');
+      if (existingOverlay) {
+        existingOverlay.style.display = 'flex';
+        return;
+      }
+      
+      // 新しいオーバーレイを作成
+      var overlay = document.createElement('div');
+      overlay.id = 'url-bar-overlay';
+      overlay.innerHTML = '&#8593;&#8595;&nbsp;スワイプしてURLバーを隠す';
+      overlay.style.display = 'flex';
+      
+      // bodyの最初に挿入（最上位に表示）
+      document.body.insertBefore(overlay, document.body.firstChild);
+      
+      console.log('URLバー隠し用オーバーレイを作成しました');
+    }
+
+    /**
+     * URLバー隠し用オーバーレイを削除
+     */
+    function removeUrlBarOverlay() {
+      var overlay = document.getElementById('url-bar-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        console.log('URLバー隠し用オーバーレイを非表示にしました');
+      }
+    }
+
     // 端末向き変更時のイベント登録 複数イベントで登録し、ハンドラ側でデバウンス処理を行う
     if (screen.orientation && screen.orientation.addEventListener) {
       screen.orientation.addEventListener('change', handleOrientationChange, false);
@@ -567,16 +644,42 @@
       visualViewport.addEventListener('resize', handleOrientationChange, false);
     }
     
-    // URLバー状態変化の監視（iOS用）
+    // URLバー状態変化の監視（iOS用・強化版）
     if (isIOSDevice()) {
       window.addEventListener('resize', function() {
-        // URLバーが隠れた後の処理
-        if (isMobileLandScape() && !isUrlBarVisible()) {
-          // レイアウト再調整
-          setTimeout(adjustCoverImageHeight, 100);
+        if (isMobileLandScape()) {
+          // URLバー状態に応じてオーバーレイを更新
+          updateUrlBarOverlay();
+          
+          // URLバーが隠れた後の処理
+          if (!isUrlBarVisible()) {
+            // レイアウト再調整
+            setTimeout(adjustCoverImageHeight, 100);
+          }
         }
       });
     }
+
+    // fvPlayerからのpostMessage受信処理
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'fvPlayer_touchAction') {
+        var mode = event.data.mode;
+        console.log('親ページでfvPlayer touch-action制御メッセージを受信:', mode);
+        
+        if (mode === 'restricted') {
+          // URLバー非表示時：親ページコンテナでスクロール禁止
+          document.body.classList.add('urlbar-hidden');
+          document.body.classList.remove('urlbar-visible');
+          console.log('親ページ: restrictedモード適用');
+          
+        } else if (mode === 'normal') {
+          // 通常時：親ページコンテナで全操作許可
+          document.body.classList.remove('urlbar-hidden');
+          document.body.classList.add('urlbar-visible');
+          console.log('親ページ: normalモード適用');
+        }
+      }
+    });
 
     function adjustCoverImageHeight() {
       // ヘッダ・フッタの固定長と画面高さを取得
@@ -672,7 +775,107 @@
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(adjustCoverImageHeight, 100);
       });
+      
+      // デバッグ用：URLバー制御の動作テスト機能
+      if (window.location.hash.includes('debug')) {
+        createDebugPanel();
+      }
     });
+
+    /**
+     * デバッグパネル作成（動作テスト用）
+     */
+    function createDebugPanel() {
+      var debugPanel = document.createElement('div');
+      debugPanel.id = 'debug-panel';
+      debugPanel.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 10000;
+        font-size: 12px;
+        font-family: monospace;
+        max-width: 250px;
+      `;
+      
+      debugPanel.innerHTML = `
+        <div>【URLバー制御デバッグ】</div>
+        <div>端末向き: <span id="debug-orientation">-</span></div>
+        <div>URLバー: <span id="debug-urlbar">-</span></div>
+        <div>body class: <span id="debug-body-class">-</span></div>
+        <div>プレーヤーモード: <span id="debug-player-mode">-</span></div>
+        <button onclick="testTouchActionMode('normal')" style="margin:2px;">Normal</button>
+        <button onclick="testTouchActionMode('restricted')" style="margin:2px;">Restricted</button>
+        <button onclick="debugInfo()" style="margin:2px;">Info</button>
+      `;
+      
+      document.body.appendChild(debugPanel);
+      
+      // 定期更新
+      setInterval(updateDebugInfo, 1000);
+    }
+
+    /**
+     * デバッグ情報を更新
+     */
+    function updateDebugInfo() {
+      var debugPanel = document.getElementById('debug-panel');
+      if (!debugPanel) return;
+      
+      var orientation = getOrientation();
+      var urlBarState = isUrlBarVisible() ? '表示' : '非表示';
+      var bodyClasses = document.body.className;
+      var playerMode = player_ref && typeof player_ref.getTouchActionMode === 'function' 
+        ? player_ref.getTouchActionMode() : 'unknown';
+      
+      document.getElementById('debug-orientation').textContent = orientation;
+      document.getElementById('debug-urlbar').textContent = urlBarState;
+      document.getElementById('debug-body-class').textContent = bodyClasses;
+      document.getElementById('debug-player-mode').textContent = playerMode;
+    }
+
+    /**
+     * touch-actionモードのテスト
+     */
+    function testTouchActionMode(mode) {
+      console.log('デバッグ: touch-actionモードテスト -', mode);
+      if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+        var result = player_ref.setTouchActionMode(mode);
+        console.log('テスト結果:', result);
+        updateDebugInfo();
+      } else {
+        console.log('プレーヤーAPIが利用できません');
+      }
+    }
+
+    /**
+     * デバッグ情報をコンソールに出力
+     */
+    function debugInfo() {
+      console.log('=== URLバー制御デバッグ情報 ===');
+      console.log('端末:', navigator.userAgent);
+      console.log('iOSデバイス:', isIOSDevice());
+      console.log('モバイル横向き:', isMobileLandScape());
+      console.log('URLバー表示:', isUrlBarVisible());
+      console.log('画面サイズ:', {
+        screenWidth: screen.width,
+        windowInnerHeight: window.innerHeight,
+        heightDiff: screen.width - window.innerHeight
+      });
+      console.log('bodyクラス:', document.body.className);
+      
+      if (player_ref) {
+        console.log('プレーヤー情報:', {
+          ready: player_ref.getReady(),
+          touchActionMode: typeof player_ref.getTouchActionMode === 'function' 
+            ? player_ref.getTouchActionMode() : 'APIなし'
+        });
+      }
+    }
 
   </script>
 </body>
