@@ -459,8 +459,7 @@
                        ua.indexOf('version') !== -1;
 
       if (isSafari) {
-        alert ('safari detected');
-        console.log("Safari detected"); // alertの代わりにconsole.logを推奨
+        // console.log("Safari detected"); // alertの代わりにconsole.logを推奨
       }
 
       return isSafari;
@@ -764,12 +763,13 @@
       // ヘッダ・フッタの固定長と画面高さを取得
       headerContainerHeight = $('#header-container').outerHeight();
       tickerHeight = $('#ticker').outerHeight();
+      archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
       windowWidth = $(window).width();
 
       // windowHeight = $(window).outerHeight(true);
       windowHeight = $(window).outerHeight(true);
 
-      contentHeight = windowHeight - (headerContainerHeight + tickerHeight);
+      contentHeight = windowHeight - (headerContainerHeight + tickerHeight+ archiveNoticeHeight);
       // モバイル横向きは、ヘッダとティッカーサイズを非表示の前提
       if (isMobileLandScape()) {
         contentHeight = windowHeight;
@@ -781,22 +781,6 @@
         // レスポンシブレイアウト対応：プレーヤーエリアの幅を基準にする
         var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
 
-        // 1024px以上の場合は、コメント欄分の幅を考慮
-        // if (windowWidth >= 1024) {
-        //   // 画面幅に応じてコメント欄幅を計算
-        //   var commentWidth;
-        //   if (windowWidth <= 1440) {
-        //     commentWidth = 300; // 1024px-1440px: 300px
-        //   } else {
-        //     commentWidth = 400; // 1441px以上: 400px
-        //   }
-        //   // コメント欄 + gapを引く
-        //   var availableWidth = windowWidth - (commentWidth + 24);
-        //   // プレーヤーエリアの実際の幅と比較して小さい方を使用
-        //   availableWidth = Math.min(availableWidth, playerAreaWidth);
-        // } else {
-        //   var availableWidth = playerAreaWidth;
-        // }
         availableWidth = playerAreaWidth;
         new_width = (contentHeight - 47) * 16 / 9;
 
