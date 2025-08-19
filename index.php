@@ -614,20 +614,6 @@
     }
 
     /**
-     * URLバーが表示されている場合に隠す処理
-     */
-    function hideUrlBarIfNeeded() {
-      // URLバー表示状態をチェック
-      if (isUrlBarVisible()) {
-        // 微小なスクロールでURLバーを隠す
-        window.scrollTo(0, 1);
-
-        // デバッグログ
-        console.log('URLバー非表示処理を実行しました');
-      }
-    }
-
-    /**
      * URLバーが表示されているかを判定
      * @return {boolean} true: 表示中, false: 非表示
      */
@@ -638,7 +624,7 @@
 
       // 画面の幅と高さの差でURLバーの表示状態を判定
       var heightDiff = screen.width - window.innerHeight;
-      return heightDiff > 20;
+      return heightDiff > 0;
     }
 
     /**
@@ -674,7 +660,7 @@
           const remainingHeight = windowHeight - iframeTop;
 
           // 残りの高さ + 10pxでiframeの高さを設定
-          const iframeHeight = remainingHeight + 10;
+          const iframeHeight = remainingHeight + 100;
 
           mobileIframe.style.top = iframeTop + 'px';
           mobileIframe.style.height = iframeHeight + 'px';
@@ -785,40 +771,43 @@
         var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
 
         // 1024px以上の場合は、コメント欄分の幅を考慮
-        if (windowWidth >= 1024) {
-          // 画面幅に応じてコメント欄幅を計算
-          var commentWidth;
-          if (windowWidth <= 1440) {
-            commentWidth = 300; // 1024px-1440px: 300px
-          } else {
-            commentWidth = 400; // 1441px以上: 400px
-          }
-
-          // コメント欄 + gapを引く
-          var availableWidth = windowWidth - (commentWidth + 24);
-          // プレーヤーエリアの実際の幅と比較して小さい方を使用
-          availableWidth = Math.min(availableWidth, playerAreaWidth);
-        } else {
-          var availableWidth = playerAreaWidth;
-        }
-
+        // if (windowWidth >= 1024) {
+        //   // 画面幅に応じてコメント欄幅を計算
+        //   var commentWidth;
+        //   if (windowWidth <= 1440) {
+        //     commentWidth = 300; // 1024px-1440px: 300px
+        //   } else {
+        //     commentWidth = 400; // 1441px以上: 400px
+        //   }
+        //   // コメント欄 + gapを引く
+        //   var availableWidth = windowWidth - (commentWidth + 24);
+        //   // プレーヤーエリアの実際の幅と比較して小さい方を使用
+        //   availableWidth = Math.min(availableWidth, playerAreaWidth);
+        // } else {
+        //   var availableWidth = playerAreaWidth;
+        // }
+        availableWidth = playerAreaWidth;
         new_width = (contentHeight - 47) * 16 / 9;
 
-        if (new_width < availableWidth) {
+        if (new_width <= availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
           if (isMobileLandScape() && isIOSDevice()) {
-            new_width = window.screen.width * 16 / 9;
+            // dynVh = getVhUnitPx('dvh');
+            //new_width = dynVh * 16 / 9;
+            new_width = window.screen.width * 16 / 9; // タブ無時はこれ
+            // new_width = (contentHeight - 47) * 16 / 9; // タブ有時はこれ
             // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
             $('#fvPlayer').width(new_width + 'px');
             console.log("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           } else {
             $('#fvPlayer').width(new_width + 'px');
-            //console.log("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+            console.log("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           }
         } else {
           $('#fvPlayer').width(availableWidth + 'px');
-          //console.log("@@@@@ p3 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+          console.log("@@@@@ p3 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
         }
+        logScreenAndVhSizes();
       }
 
       // main.jsの関数も呼び出してレイアウトを同期
