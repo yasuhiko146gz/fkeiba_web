@@ -96,7 +96,7 @@
     </div>
 
     <!-- モバイル縦向き用透明iframe -->
-    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: red; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
+    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: green; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
   </div>
 
   <!-- ヘルプ start -->
@@ -268,7 +268,7 @@
 
     cover_content = <?php echo json_encode($COVER_CONTENT); ?>;
 
-    const isLive = false;
+    const isLive = true;
 
     new FvLivePlayer(
       'fvPlayer', {
@@ -489,6 +489,9 @@
             $('#ticker').hide();
             $('.archive-notice').hide();
 
+            // iframeサイズ調整
+            handleMobilePortraitIframe();
+
             // iPhone Safari URLバー自動非表示機能
             handleUrlBarAutoHide();
           } else {
@@ -612,16 +615,40 @@
           autoHideUrlBar();
         }, 300);
       } else {
+        // プレーヤーの高さとlargeVhを比較してスクロールロック条件を判定
+        const largeVh = getVhUnitPx('lvh');
+        const playerHeight = $('.video-player-area').outerHeight() || 0;
+        const heightDiff = Math.abs(playerHeight - largeVh);
 
-        // URLバー非表示：スクロール禁止状態
-        document.body.classList.add('ios-landscape-url-hidden');
+        debugLog('スクロールロック判定: playerHeight=' + playerHeight + ', largeVh=' + largeVh + ', diff=' + heightDiff);
 
-        // プレーヤーに制限モードを通知
-        if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
-          player_ref.setTouchActionMode('restricted');
+        // プレーヤーの縦幅とlargeVhが1px以内の差の場合のみスクロールロック
+        if (heightDiff <= 1) {
+          // URLバー非表示：スクロール禁止状態
+          document.body.classList.add('ios-landscape-url-hidden');
+
+          // プレーヤーに制限モードを通知
+          if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+            player_ref.setTouchActionMode('restricted');
+          }
+
+          debugLog('URLバー非表示検出：スクロール制御を適用 (プレーヤー高さ一致)');
+        } else {
+          // 高さが一致しない場合はスクロール可能状態を維持
+          document.body.classList.remove('ios-landscape-url-hidden');
+
+          // プレーヤーに通常モードを通知
+          if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+            player_ref.setTouchActionMode('normal');
+          }
+
+          debugLog('プレーヤー高さ不一致のためスクロールロックをスキップ');
+
+          // 再度URLバー非表示を試行
+          setTimeout(function() {
+            autoHideUrlBar();
+          }, 300);
         }
-
-        debugLog('URLバー非表示検出：スクロール制御を適用');
       }
     }
 
