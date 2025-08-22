@@ -49,19 +49,6 @@
   <link rel="stylesheet" type="text/css" href="https://yui.yahooapis.com/3.18.1/build/cssreset/cssreset-min.css">
   -->
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HRW2S9NW67"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-
-    gtag('config', 'G-HRW2S9NW67');
-  </script>
-
   <!-- fvLivePlayer -->
   <script src="/lib/fvLivePlayer/lib/platform.js"></script>
   <script src="/lib/fvLivePlayer/embed.min.js"></script>
@@ -72,8 +59,6 @@
   <link href="./css/style.css" rel="stylesheet" type="text/css">
   <!-- main js -->
   <script type="text/javascript" src="./js/main.js"> </script>
-  <!-- YouTube Liveコメント表示JS -->
-  <!-- <script type="text/javascript" src="./js/youtube-comments.js"> </script> -->
 
 </head>
 
@@ -114,7 +99,9 @@
     <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: red; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
   </div>
 
-  <!-- ヘルプ -->
+  <!-- ヘルプ start -->
+  <!-- 一時的に削除 -->
+  <!-- ヘルプ end -->
   <div class="modal fade" id="modal2" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
