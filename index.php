@@ -268,6 +268,8 @@
 
     cover_content = <?php echo json_encode($COVER_CONTENT); ?>;
 
+    const isLive = false;
+
     new FvLivePlayer(
       'fvPlayer', {
         originWidth: 1920,
@@ -275,7 +277,7 @@
         disableSeek: false,
         enableShare: false,
         isTheaterModeEnable: true,
-        isLive: false,
+        isLive: isLive,
         enableMMS: true,
         showLicensee: false,
         autoplay: false,
@@ -909,17 +911,15 @@
             const smallVh = getVhUnitPx('svh'); // URLバーあり基準
             const largeVh = getVhUnitPx('lvh'); // URLバーなし基準
             const dynVh = getVhUnitPx('dvh'); // 現在の実表示
-            // new_width = dynVh * 16 / 9;
+            controlHeight = isLive ? 0 : 47;
             if (getClosestVh(smallVh, largeVh, dynVh) > 0) {
-              new_width = (largeVh) * 16 / 9; // タブ無時はこれ
+              new_width = (largeVh - controlHeight) * 16 / 9; // タブ無時はこれ
             } else {
-              new_width = (smallVh) * 16 / 9;
-              // new_width = window.screen.width * 16 / 9;
+              new_width = (smallVh - controlHeight) * 16 / 9;
             }
             // new_width = (contentHeight - 47) * 16 / 9; // タブ有時はこれ
-            // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
             $('#fvPlayer').width(new_width + 'px');
-            debugLog("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+            debugLog("@@@@@ p1 ww=" + windowWidth + " ch=" +controlHeight +" wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           } else {
             $('#fvPlayer').width(new_width + 'px');
             debugLog("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
