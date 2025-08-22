@@ -779,7 +779,7 @@
           const remainingHeight = windowHeight - iframeTop;
 
           // 残りの高さ + 10pxでiframeの高さを設定（画面を10px縦方向にはみ出す）
-          const iframeHeight = remainingHeight + 10;
+          const iframeHeight = remainingHeight + 100;
 
           mobileIframe.style.top = iframeTop + 'px';
           mobileIframe.style.height = iframeHeight + 'px';

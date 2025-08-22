@@ -505,11 +505,11 @@ div#environment table tbody tr td p.danger{
 }
 
 /* 横向き時のモバイル縦向き用iframe非表示 */
-@media (orientation: landscape) {
+/* @media (orientation: landscape) {
   #mobile-overlay-iframe {
     display: none !important;
   }
-}
+} */
 
 /* タブバー待機時のpan-yのみ許可 */
 .ios-landscape-tab-wait body,
