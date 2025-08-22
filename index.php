@@ -534,6 +534,13 @@
             if (isIOSDevice()) {
               document.body.classList.remove('ios-landscape');
               document.body.classList.remove('ios-landscape-url-hidden');
+              document.body.classList.remove('ios-landscape-tab-wait');
+              
+              // pan-y待機中の場合はリスナーを削除
+              if (_tabBarWaitingForPanY) {
+                _tabBarWaitingForPanY = false;
+                removePanYListener();
+              }
             }
 
             // モバイル縦向き時の透明iframe制御
@@ -544,26 +551,53 @@
       }
     }
 
+    // タブバー状態とURLバー制御の状態管理
+    var _tabBarWaitingForPanY = false;
+
     /**
-     * iPhone Safari URLバー自動非表示処理
+     * iPhone Safari URLバー自動非表示処理（タブバー状態に応じて制御）
      */
     function handleUrlBarAutoHide() {
       if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
         return;
       }
 
-      // iOS用CSSクラスを追加
-      document.body.classList.add('ios-landscape');
+      // タブバーの有無を判定
+      const hasTabBar = isTabBarVisible();
 
-      // 自動的にURLバーを隠す処理を実行
-      setTimeout(function() {
-        autoHideUrlBar();
-      }, 150);
+      if (hasTabBar) {
+        // タブバーがある場合：制限モード2でpan-y待機状態に
+        console.log('タブバー検出：制限モード2でpan-y待機');
+        _tabBarWaitingForPanY = true;
+        
+        // iOS用CSSクラスを追加（pan-yのみ許可）
+        document.body.classList.add('ios-landscape-tab-wait');
+        
+        // プレーヤーを制限モード2に設定
+        if (player_ref && typeof player_ref.setTouchActionMode === 'function') {
+          player_ref.setTouchActionMode('pan-y_only');
+        }
 
-      // 念のため追加で実行（端末によってタイミングが異なる場合がある）
-      setTimeout(function() {
-        autoHideUrlBar();
-      }, 400);
+        // pan-yイベントリスナーを追加
+        setupPanYListener();
+      } else {
+        // タブバーがない場合：通常通りURLバー非表示処理を開始
+        console.log('タブバーなし：通常のURLバー非表示処理開始');
+        _tabBarWaitingForPanY = false;
+        
+        // iOS用CSSクラスを追加
+        document.body.classList.add('ios-landscape');
+
+        // 自動的にURLバーを隠す処理を実行
+        setTimeout(function() {
+          autoHideUrlBar();
+        }, 150);
+
+        // 念のため追加で実行（端末によってタイミングが異なる場合がある）
+        setTimeout(function() {
+          autoHideUrlBar();
+        }, 400);
+      }
     }
 
     /**
@@ -638,23 +672,124 @@
     }
 
     /**
-     * モバイル縦向き時の透明iframeサイズ調整
+     * iOS Safari でタブバーが表示されているかを判定
+     * @return {boolean} true: タブバー表示中, false: タブバーなし
+     */
+    function isTabBarVisible() {
+      if (!isIOSDevice() || !isSafari() || !isMobileLandScape()) {
+        return false;
+      }
+
+      const smallVh = getVhUnitPx('svh'); // URLバーあり基準
+      const largeVh = getVhUnitPx('lvh'); // URLバーなし基準
+      const screenHeight = window.screen.height;
+
+      // タブバーがある場合、lvh（URLバーなし時の高さ）がscreen.heightより大幅に小さくなる
+      // 通常、タブバーは44px程度の高さを持つ
+      const tabBarThreshold = 40; // タブバー判定の閾値（px）
+      
+      const hasTabBar = (screenHeight - largeVh) > tabBarThreshold;
+      
+      console.log('タブバー判定:', {
+        screenHeight: screenHeight,
+        smallVh: smallVh,
+        largeVh: largeVh,
+        diff: screenHeight - largeVh,
+        hasTabBar: hasTabBar
+      });
+
+      return hasTabBar;
+    }
+
+    /**
+     * pan-yイベントリスナーを設定してURLバー非表示処理を待機
+     */
+    function setupPanYListener() {
+      let startY = 0;
+      let isTracking = false;
+
+      function handleTouchStart(e) {
+        if (!_tabBarWaitingForPanY) return;
+        startY = e.touches[0].clientY;
+        isTracking = true;
+      }
+
+      function handleTouchMove(e) {
+        if (!_tabBarWaitingForPanY || !isTracking) return;
+        
+        const currentY = e.touches[0].clientY;
+        const deltaY = Math.abs(currentY - startY);
+        
+        // 10px以上の縦方向移動を検知したらURLバー非表示処理を開始
+        if (deltaY > 10) {
+          console.log('pan-y操作検知：URLバー非表示処理開始');
+          _tabBarWaitingForPanY = false;
+          
+          // pan-y待機用CSSクラスを削除し、通常のios-landscapeクラスを追加
+          document.body.classList.remove('ios-landscape-tab-wait');
+          document.body.classList.add('ios-landscape');
+          
+          // URLバー非表示処理を開始
+          setTimeout(function() {
+            autoHideUrlBar();
+          }, 150);
+          
+          setTimeout(function() {
+            autoHideUrlBar();
+          }, 400);
+          
+          // イベントリスナーを削除
+          removePanYListener();
+        }
+      }
+
+      function handleTouchEnd() {
+        isTracking = false;
+      }
+
+      // イベントリスナーを追加
+      document.addEventListener('touchstart', handleTouchStart, { passive: true });
+      document.addEventListener('touchmove', handleTouchMove, { passive: true });
+      document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+      // リスナー削除用に関数を保存
+      window._panYListeners = {
+        touchstart: handleTouchStart,
+        touchmove: handleTouchMove,
+        touchend: handleTouchEnd
+      };
+    }
+
+    /**
+     * pan-yイベントリスナーを削除
+     */
+    function removePanYListener() {
+      if (window._panYListeners) {
+        document.removeEventListener('touchstart', window._panYListeners.touchstart);
+        document.removeEventListener('touchmove', window._panYListeners.touchmove);
+        document.removeEventListener('touchend', window._panYListeners.touchend);
+        delete window._panYListeners;
+      }
+    }
+
+    /**
+     * モバイル時の透明iframeサイズ調整（縦向き・横向き両対応）
      */
     function handleMobilePortraitIframe() {
       const mobileIframe = document.getElementById('mobile-overlay-iframe');
 
-      if (isMobileDevice() && getOrientation() === 'portrait') {
+      if (isMobileDevice()) {
         // プレーヤーが表示されているかチェック
         const isPlayerVisible = $('#fvPlayer').is(':visible');
 
         if (isPlayerVisible) {
-          // ヘッダー高さを取得
+          // ヘッダー高さを取得（横向き時は非表示なので0）
           const headerHeight = $('#header-container').is(':visible') ? $('#header-container').outerHeight() || 0 : 0;
 
-          // ティッカー高さを取得
+          // ティッカー高さを取得（横向き時は非表示なので0）
           const tickerHeight = $('#ticker').is(':visible') ? $('#ticker').outerHeight() || 0 : 0;
 
-          // アーカイブ通知高さを取得
+          // アーカイブ通知高さを取得（横向き時は非表示なので0）
           const archiveNoticeHeight = $('.archive-notice').is(':visible') ? $('.archive-notice').outerHeight() || 0 : 0;
 
           // プレーヤー高さを取得
@@ -669,7 +804,7 @@
           // 残りの高さを計算
           const remainingHeight = windowHeight - iframeTop;
 
-          // 残りの高さ + 10pxでiframeの高さを設定
+          // 残りの高さ + 10pxでiframeの高さを設定（画面を10px縦方向にはみ出す）
           const iframeHeight = remainingHeight + 10;
 
           mobileIframe.style.top = iframeTop + 'px';
@@ -682,6 +817,7 @@
 
           // デバッグ情報をコンソールに出力
           console.log('iframe調整:', {
+            orientation: getOrientation(),
             windowHeight: windowHeight,
             headerHeight: headerHeight,
             tickerHeight: tickerHeight,
@@ -702,11 +838,10 @@
           document.getElementById('container').style.minHeight = 'auto';
         }
       } else {
-        // 横向き時はページ高さをリセット
+        // PC等非モバイル時はページ高さをリセット
         document.body.style.minHeight = 'auto';
         document.getElementById('container').style.minHeight = 'auto';
       }
-      // 横向き時はサイズ変更しない（そのまま）
     }
 
     // 端末向き変更時のイベント登録 複数イベントで登録し、ハンドラ側でデバウンス処理を行う

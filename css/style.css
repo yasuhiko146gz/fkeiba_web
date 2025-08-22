@@ -511,6 +511,13 @@ div#environment table tbody tr td p.danger{
   }
 }
 
+/* タブバー待機時のpan-yのみ許可 */
+.ios-landscape-tab-wait body,
+.ios-landscape-tab-wait #container {
+  touch-action: pan-y !important;
+  overflow: hidden !important;
+}
+
 /* 既存のios-landscapeクラス（後方互換性のため残す） */
 .ios-landscape body {
   height: calc(100vh + 1px) !important;
