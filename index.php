@@ -527,9 +527,9 @@
       }
 
       // タブバーの有無を判定
-      const hasTabBar = isTabBarVisible();
+      var hasTabBar = isTabBarVisible();
+      hasTabBar = false; // TODO: タブバーを隠す制御は保留
 
-      hasTabBar = false;
       if (hasTabBar) {
         // タブバーがある場合：制限モード2でpan-y待機状態に
         debugLog('タブバー検出：制限モード2でpan-y待機');
