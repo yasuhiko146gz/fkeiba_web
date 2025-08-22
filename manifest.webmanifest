@@ -1,0 +1,13 @@
+{
+  "name": "船橋マルチスクリーン",
+  "short_name": "船橋マルチ",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "icons": [
+    { "src": "/img/k_180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/img/k_120.png", "sizes": "120x120", "type": "image/png" }
+  ]
+}
+

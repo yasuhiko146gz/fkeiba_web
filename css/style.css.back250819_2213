@@ -507,15 +507,8 @@ div#environment table tbody tr td p.danger{
 /* 横向き時のモバイル縦向き用iframe非表示 */
 @media (orientation: landscape) {
   #mobile-overlay-iframe {
-    display: none !important;
+    /* display: none !important; */
   }
-}
-
-/* タブバー待機時のpan-yのみ許可 */
-.ios-landscape-tab-wait body,
-.ios-landscape-tab-wait #container {
-  touch-action: pan-y !important;
-  overflow: hidden !important;
 }
 
 /* 既存のios-landscapeクラス（後方互換性のため残す） */
