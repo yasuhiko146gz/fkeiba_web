@@ -256,6 +256,13 @@
   ?>
 
   <script type='text/javascript'>
+    // 統一的なログ関数 - 現在時刻をミリ秒3桁まで表示
+    function debugLog(message) {
+      var now = new Date();
+      var timestamp = now.toISOString().slice(0, -1); // Zを除去
+      console.log('[' + timestamp + '] ' + message);
+    }
+
     var player_ref = null;
     var initCaption = false;
 
@@ -285,9 +292,7 @@
             level: 3,
             tag: 'main',
             isMain: true,
-            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
-            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '出走表',
@@ -295,8 +300,7 @@
             y: 0,
             level: 1,
             tag: 'camera1',
-            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv1.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '本場映像',
@@ -304,8 +308,7 @@
             y: 1,
             level: 1,
             tag: 'camera2',
-            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv2.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv2_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv2_q1/playlist.m3u8'
           },
           {
             caption: 'オッズ',
@@ -313,8 +316,7 @@
             y: 2,
             level: 1,
             tag: 'camera3',
-            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv3.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv3_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv3_q1/playlist.m3u8'
           },
           {
             caption: 'ハートビートライブ',
@@ -323,8 +325,7 @@
             level: 1,
             tag: 'camera4',
             defaultView: true,
-            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv4.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv4_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv4_q1/playlist.m3u8'
           },
           {
             caption: 'パドック③',
@@ -332,8 +333,7 @@
             y: 3,
             level: 1,
             tag: 'camera5',
-            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv5.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv5_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv5_q1/playlist.m3u8'
           },
           {
             caption: 'パドック②',
@@ -341,8 +341,7 @@
             y: 3,
             level: 1,
             tag: 'camera6',
-            //src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv6.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv6_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv6_q1/playlist.m3u8'
           },
           {
             caption: 'パドック①',
@@ -350,13 +349,11 @@
             y: 3,
             level: 1,
             tag: 'camera7',
-            // src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/smil:0730_fv7.smil/playlist.m3u8'
-            src: 'https://d1ke28lwcarijs.cloudfront.net/vodcf/0730_fv7_q1/playlist.m3u8'
+            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv7_q1/playlist.m3u8'
           }
         ],
 
         onReady: function(player) {
-          //console.log("HTML onReady");
           // Windowsでプレイヤーの表示が崩れるの対応
           setTimeout(function() {
             $(window).trigger("resize");
@@ -430,10 +427,6 @@
       const isSafari = ua.indexOf('safari') !== -1 &&
         ua.indexOf('version') !== -1;
 
-      if (isSafari) {
-        // console.log("Safari detected"); // alertの代わりにconsole.logを推奨
-      }
-
       return isSafari;
     }
 
@@ -488,7 +481,6 @@
       // 前回と向きが変わった時のみ実施
       if (newOrientation !== _lastOrientation) {
         _lastOrientation = newOrientation;
-        //console.log('orientation changed → ' + newOrientation);
         if (isMobileDevice()) {
           if (getOrientation() == "landscape") {
             $('#header-container').hide();
@@ -540,7 +532,7 @@
       hasTabBar = false;
       if (hasTabBar) {
         // タブバーがある場合：制限モード2でpan-y待機状態に
-        console.log('タブバー検出：制限モード2でpan-y待機');
+        debugLog('タブバー検出：制限モード2でpan-y待機');
         _tabBarWaitingForPanY = true;
 
         // iOS用CSSクラスを追加（pan-yのみ許可）
@@ -555,7 +547,7 @@
         setupPanYListener();
       } else {
         // タブバーがない場合：通常通りURLバー非表示処理を開始
-        console.log('タブバーなし：通常のURLバー非表示処理開始');
+        debugLog('タブバーなし：通常のURLバー非表示処理開始');
         _tabBarWaitingForPanY = false;
 
         // iOS用CSSクラスを追加
@@ -618,6 +610,7 @@
           autoHideUrlBar();
         }, 300);
       } else {
+
         // URLバー非表示：スクロール禁止状態
         document.body.classList.add('ios-landscape-url-hidden');
 
@@ -626,7 +619,7 @@
           player_ref.setTouchActionMode('restricted');
         }
 
-        console.log('URLバー非表示検出：スクロール制御を適用');
+        debugLog('URLバー非表示検出：スクロール制御を適用');
       }
     }
 
@@ -663,13 +656,13 @@
 
       const hasTabBar = (screenHeight - largeVh) > tabBarThreshold;
 
-      console.log('タブバー判定:', {
+      debugLog('タブバー判定: ' + JSON.stringify({
         screenHeight: screenHeight,
         smallVh: smallVh,
         largeVh: largeVh,
         diff: screenHeight - largeVh,
         hasTabBar: hasTabBar
-      });
+      }));
 
       return hasTabBar;
     }
@@ -695,7 +688,7 @@
 
         // 10px以上の縦方向移動を検知したらURLバー非表示処理を開始
         if (deltaY > 10) {
-          console.log('pan-y操作検知：URLバー非表示処理開始');
+          debugLog('pan-y操作検知：URLバー非表示処理開始');
           _tabBarWaitingForPanY = false;
 
           // pan-y待機用CSSクラスを削除し、通常のios-landscapeクラスを追加
@@ -795,18 +788,18 @@
           document.getElementById('container').style.minHeight = totalPageHeight + 'px';
 
           // デバッグ情報をコンソールに出力
-          console.log('iframe調整:', {
-            orientation: getOrientation(),
-            windowHeight: windowHeight,
-            headerHeight: headerHeight,
-            tickerHeight: tickerHeight,
-            archiveNoticeHeight: archiveNoticeHeight,
-            playerHeight: playerHeight,
-            iframeTop: iframeTop,
-            remainingHeight: remainingHeight,
-            iframeHeight: iframeHeight,
-            totalPageHeight: totalPageHeight
-          });
+          // console.log('iframe調整:', {
+          //   orientation: getOrientation(),
+          //   windowHeight: windowHeight,
+          //   headerHeight: headerHeight,
+          //   tickerHeight: tickerHeight,
+          //   archiveNoticeHeight: archiveNoticeHeight,
+          //   playerHeight: playerHeight,
+          //   iframeTop: iframeTop,
+          //   remainingHeight: remainingHeight,
+          //   iframeHeight: iframeHeight,
+          //   totalPageHeight: totalPageHeight
+          // });
         } else {
           // プレーヤー非表示時はデフォルト位置
           mobileIframe.style.top = '0px';
@@ -880,8 +873,8 @@
       const screenH = Math.round(window.screen.height); // デバイス全体の高さ
       const screenW = Math.round(window.screen.width); // デバイス全体の高さ
 
-      console.log(
-        `@@@@@ screenHeight: ${screenW} smallVh: ${smallVh}, largeVh: ${largeVh}, dynVh: ${dynVh}`
+      debugLog(
+        `@@@@@ logScreenAndVhSizes screenHeight: ${screenW} smallVh: ${smallVh}, largeVh: ${largeVh}, dynVh: ${dynVh}`
       );
     }
 
@@ -926,14 +919,14 @@
             // new_width = (contentHeight - 47) * 16 / 9; // タブ有時はこれ
             // $('#fvPlayer').width(Math.min(new_width, availableWidth) + 'px');
             $('#fvPlayer').width(new_width + 'px');
-            console.log("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+            debugLog("@@@@@ p1 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           } else {
             $('#fvPlayer').width(new_width + 'px');
-            console.log("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+            debugLog("@@@@@ p2 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
           }
         } else {
           $('#fvPlayer').width(availableWidth + 'px');
-          console.log("@@@@@ p3 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
+          debugLog("@@@@@ p3 ww=" + windowWidth + " wh=" + windowHeight + " contentHeight=" + contentHeight + " availableWidth:" + availableWidth + " new_width:" + new_width);
         }
         logScreenAndVhSizes();
       }
@@ -1000,7 +993,7 @@
       },
     });
 
-    $(document).ready(function() {
+    window.onload = function() {
       handleOrientationChange();
       adjustCoverImageHeight();
       handleMobilePortraitIframe();
@@ -1012,7 +1005,7 @@
           handleMobilePortraitIframe();
         }, 100);
       });
-    });
+    };
   </script>
 </body>
 
