@@ -268,7 +268,7 @@
 
     cover_content = <?php echo json_encode($COVER_CONTENT); ?>;
 
-    const isLive = true;
+    const isLive = false;
 
     new FvLivePlayer(
       'fvPlayer', {
@@ -294,7 +294,7 @@
             level: 3,
             tag: 'main',
             isMain: true,
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv1_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '出走表',
@@ -302,7 +302,7 @@
             y: 0,
             level: 1,
             tag: 'camera1',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv1_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv1_q1/playlist.m3u8'
           },
           {
             caption: '本場映像',
@@ -310,7 +310,7 @@
             y: 1,
             level: 1,
             tag: 'camera2',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv2_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv2_q1/playlist.m3u8'
           },
           {
             caption: 'オッズ',
@@ -318,7 +318,7 @@
             y: 2,
             level: 1,
             tag: 'camera3',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv3_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv3_q1/playlist.m3u8'
           },
           {
             caption: 'ハートビートライブ',
@@ -327,7 +327,7 @@
             level: 1,
             tag: 'camera4',
             defaultView: true,
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv4_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv4_q1/playlist.m3u8'
           },
           {
             caption: 'パドック③',
@@ -335,7 +335,7 @@
             y: 3,
             level: 1,
             tag: 'camera5',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv5_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv5_q1/playlist.m3u8'
           },
           {
             caption: 'パドック②',
@@ -343,7 +343,7 @@
             y: 3,
             level: 1,
             tag: 'camera6',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv6_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv6_q1/playlist.m3u8'
           },
           {
             caption: 'パドック①',
@@ -351,7 +351,7 @@
             y: 3,
             level: 1,
             tag: 'camera7',
-            src: 'https://cfoutput-fk2025-wowza.fabricvideo.tv/vodcf/0730_fv7_q1/playlist.m3u8'
+            src: 'https://d1gn6bp3dc6xcx.cloudfront.net/vodcf/0730_fv7_q1/playlist.m3u8'
           }
         ],
 
@@ -490,7 +490,7 @@
             $('.archive-notice').hide();
 
             // iframeサイズ調整
-            handleMobilePortraitIframe();
+            // handleMobilePortraitIframe();
 
             // iPhone Safari URLバー自動非表示機能
             handleUrlBarAutoHide();
@@ -617,7 +617,7 @@
       } else {
         // プレーヤーの高さとlargeVhを比較してスクロールロック条件を判定
         const largeVh = getVhUnitPx('lvh');
-        const playerHeight = $('.video-player-area').outerHeight() || 0;
+        const playerHeight = $('#fvPlayer').outerHeight() || 0;
         const heightDiff = Math.abs(playerHeight - largeVh);
 
         debugLog('スクロールロック判定: playerHeight=' + playerHeight + ', largeVh=' + largeVh + ', diff=' + heightDiff);
