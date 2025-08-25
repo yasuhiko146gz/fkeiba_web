@@ -95,8 +95,8 @@
       </div>
     </div>
 
-    <!-- モバイル縦向き用透明iframe -->
-    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: green; opacity: 0.3; z-index: 9999; border: none; pointer-events: none;"></iframe>
+    <!-- モバイル縦向き用透明iframe（iOS Safari のみ表示） -->
+    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: green; opacity: 0.3; z-index: 9999; border: none; pointer-events: none; display: none;"></iframe>
   </div>
 
   <!-- ヘルプ start -->
@@ -268,7 +268,7 @@
 
     cover_content = <?php echo json_encode($COVER_CONTENT); ?>;
 
-    const isLive = false;
+    const isLive = true;
 
     new FvLivePlayer(
       'fvPlayer', {
@@ -775,11 +775,19 @@
 
     /**
      * モバイル時の透明iframeサイズ調整（縦向き・横向き両対応）
+     * iOS Safari のみ実行
      */
     function handleMobilePortraitIframe() {
       const mobileIframe = document.getElementById('mobile-overlay-iframe');
 
+      // iOS Safari 以外は処理を行わない
+      if (!isIOSDevice() || !isSafari()) {
+        return;
+      }
+
       if (isMobileDevice()) {
+        // iOS Safari の場合のみiframeを表示
+        mobileIframe.style.display = 'block';
         // プレーヤーが表示されているかチェック
         const isPlayerVisible = $('#fvPlayer').is(':visible');
 
@@ -839,9 +847,10 @@
           document.getElementById('container').style.minHeight = 'auto';
         }
       } else {
-        // PC等非モバイル時はページ高さをリセット
+        // PC等非モバイル時はページ高さをリセットし、iframeを非表示
         document.body.style.minHeight = 'auto';
         document.getElementById('container').style.minHeight = 'auto';
+        mobileIframe.style.display = 'none';
       }
     }
 
@@ -930,7 +939,8 @@
         var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
 
         availableWidth = playerAreaWidth;
-        new_width = (contentHeight - 47) * 16 / 9;
+        var controlHeight = isLive ? 40 : 47;
+        new_width = (contentHeight - controlHeight) * 16 / 9; 
 
         if (new_width <= availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
