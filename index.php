@@ -96,7 +96,7 @@
     </div>
 
     <!-- モバイル縦向き用透明iframe（iOS Safari のみ表示） -->
-    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: green; opacity: 0.3; z-index: 9999; border: none; pointer-events: none; display: none;"></iframe>
+    <iframe id="mobile-overlay-iframe" style="position: absolute; left: 0; width: 100%; background: white; opacity: 0; z-index: 9999; border: none; pointer-events: none; display: none;"></iframe>
   </div>
 
   <!-- ヘルプ start -->
@@ -939,8 +939,7 @@
         var playerAreaWidth = $('.video-player-area').length > 0 ? $('.video-player-area').width() : windowWidth;
 
         availableWidth = playerAreaWidth;
-        var controlHeight = isLive ? 40 : 47;
-        new_width = (contentHeight - controlHeight) * 16 / 9; 
+        new_width = (contentHeight - 47) * 16 / 9;
 
         if (new_width <= availableWidth) {
           // モバイル端末横向の場合、プレーヤー高さが端末高さと一致するようにする
